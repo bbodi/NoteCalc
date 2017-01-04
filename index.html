@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <script src="jslibs/math.min.js"></script>
+    <script src="jslibs/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/scroll/annotatescrollbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/search/matchesonscrollbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/search/searchcursor.min.js"></script>
+    <script src="jslibs/match-highlighter.js"></script>
+    <script src="jslibs/active-line.js"></script>
+    <script src="https://codemirror.net/addon/hint/show-hint.js"></script>
+    <link rel="stylesheet" href="jslibs/codemirror.min.css">
+    <link rel="stylesheet" href="https://codemirror.net/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.22.0/addon/search/matchesonscrollbar.min.css">
+    <link rel="stylesheet" href="jslibs/qunit-2.0.1.css">
+    <link rel="stylesheet" href="jslibs/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="jslibs/bootstrap/css/bootstrap-theme.min.css">
+    <style>
+.cm-s-default .cm-number {color: #13a03d; !important}
+.cm-s-default .cm-variable {background-color: rgb(220, 226, 247); color: black;font-weight: bold; !important}
+.cm-s-default .cm-operator {color: rgb(19, 35, 160); font-weight: bold; !important}
+.cm-s-default .cm-comment {color: black; !important}
+.cm-s-default .cm-qualifier {color: #d742f4; !important}
+.cm-s-default .cm-bracket {color: #997; !important}
+.cm-s-default .cm-keyword {color: #708; !important}
+.CodeMirror {
+  border: 1px solid #eee;
+  height: 400px;
+}
+.CodeMirror-focused .cm-matchhighlight {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVQI12NgYGBgkKzc8x9CMDAwAAAmhwSbidEoSQAAAABJRU5ErkJggg==);
+        background-position: bottom;
+        background-repeat: repeat-x;
+      }
+      .cm-matchhighlight {background-color: #F5F5F5}
+      .CodeMirror-selection-highlight-scrollbar {background-color: green}
+</style>
+</head>
+<body>
+<div id="app" ></div>
+<div id="noteCalcTable" class="row"></div>
+<button onclick="NoteCalcJS.hu.nevermind.notecalc.addButtonClicked()">Add</button>
+<select id="dropdownUlId">
+</select>
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<script src="jslibs/qunit-2.0.1.js"></script>
+<script src="out/production/NoteCalcJs/lib/kotlin.js"></script>
+<script src="out/production/NoteCalcJs/NoteCalcJS.js"></script>
+</body>
+</html>
