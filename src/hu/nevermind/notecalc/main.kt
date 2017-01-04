@@ -201,8 +201,10 @@ Difference of Citibank - Bank of America
 ${'$'}prev * 3 years
 ${'$'}prev holds the result of the previous calculation
 --
-12
-13
+12${'$'} for beer
+2*13${'$'} for tickets
+all spending = ${'$'}sum
+
 ${'$'}sum always holds the sum of the previous calculations
 -- you can reset them with at least two dashes (--) or equal signs (==)
 ${'$'}sum is now zero
