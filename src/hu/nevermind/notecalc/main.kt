@@ -23,7 +23,12 @@ val globalVariables = hashMapOf<String, Operand>()
 const val NOTE_CALC_IDS_KEY: String = "commaSeparatedNoteCaclcIds"
 const val UNNAMED_TITLE: String = "Unnamed"
 
+
 fun main(args: Array<String>) {
+    QUnit.asDynamic().config.autostart = false
+    if (window.location.search == "?test") {
+        QUnit.asDynamic().start()
+    }
     val allNoteCalcEntries = localStorage.getAllNoteCalcEntries()
     createNoteCalcEditors(allNoteCalcEntries)
     if (nextNoteCalcIndex == 0) {
