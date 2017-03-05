@@ -35,7 +35,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         val functionDefsByName = hashMapOf<String, FunctionDefinition>()
         var resultsByLineNumber = listOf<Pair<Int, Operand>>()
         val methodScopeVariableNames = arrayListOf<String>()
-        str.lines().mapIndexed { nullBasedLineIndex, line ->
+        str.lines().forEachIndexed { nullBasedLineIndex, line ->
             createVariablesForPreviousLineResults(resultsByLineNumber, variables)
             // TODO: support UTF8 characters in method names
             val functionDefInCurrentLine = tryParseFunctionDef(line)
@@ -153,7 +153,6 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
     }
 
     private fun tryParseFunctionDef(line: String): FunctionDefinition? {
-//        val matches = line.match("""fun ([\w_]+)\((([\w_][\w\d_]*)(,\s*([\w_][\w\d_]*))*)\)""")
         val matches = line.match("""fun ([^\d\s\$\-\+\*\^\:\%][^\(]*)\(([^\)]*(,[^\)]*)*)\)""")
         return if (matches != null) {
             val funName = matches[1]
@@ -190,7 +189,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
     private fun setupEventHandlers(codeMirrorInstance: dynamic, resultsCodeMirrorInstance: dynamic, onChange: (String) -> Unit) {
         setupOnChangeHandling(codeMirrorInstance, resultsCodeMirrorInstance, onChange)
         setupScrollMirroring(codeMirrorInstance, resultsCodeMirrorInstance)
-        setupCurorLineMirroring(codeMirrorInstance, resultsCodeMirrorInstance)
+        setupCursorLineMirroring(codeMirrorInstance, resultsCodeMirrorInstance)
     }
 
     private fun setupOnChangeHandling(codeMirrorInstance: dynamic, resultsCodeMirrorInstance: dynamic, onChange: (String) -> Unit) {
@@ -203,12 +202,12 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
                 onChange(codeMirrorInstance.getValue())
                 val scrollInfo = codeMirrorInstance.getScrollInfo()
                 resultsCodeMirrorInstance.scrollTo(scrollInfo.left, scrollInfo.top)
-            }, 0)
+            }, 500)
             0
         }
     }
 
-    private fun setupCurorLineMirroring(codeMirrorInstance: dynamic, resultsCodeMirrorInstance: dynamic) {
+    private fun setupCursorLineMirroring(codeMirrorInstance: dynamic, resultsCodeMirrorInstance: dynamic) {
         codeMirrorInstance.on("cursorActivity") { cm: dynamic ->
             if (codeMirrorInstance.hasFocus()) {
                 val cursor = cm.getCursor("head")
@@ -316,11 +315,16 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             }
         }
 
-        fun assertEq(expectedValue: Number, actualInput: String) {
+        fun assertEq(expectedValue: Operand, actualInput: String) {
+            val floatEq = { a: Number, b: Number -> Math.round(a.toDouble()*100) == Math.round(b.toDouble()*100) }
             QUnit.test(actualInput) { assert ->
-                val actual = processPostfixNotationStack(shuntingYard(mergeCompoundUnitsAndUnaryMinusOperators(parse(actualInput)), emptyList()), emptyMap(), emptyMap())!! as Operand.Number
-                assert.ok(expectedValue == actual.num,
-                        "$expectedValue != $actual")
+                val actual = processPostfixNotationStack(shuntingYard(mergeCompoundUnitsAndUnaryMinusOperators(parse(actualInput)), emptyList()), emptyMap(), emptyMap())!!
+                val ok = when (expectedValue) {
+                    is Operand.Number -> actual is Operand.Number && floatEq(actual.num, expectedValue.num)
+                    is Operand.Quantity -> actual is Operand.Quantity && actual.quantity.equals(expectedValue.quantity)
+                    is Operand.Percentage -> actual is Operand.Percentage && floatEq(actual.num, expectedValue.num)
+                }
+                assert.ok(ok, "${expectedValue.asString()} != ${actual.asString()}")
             }
         }
 
@@ -444,119 +448,188 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         private fun applyOperation(operator: String, lhs: Operand, rhs: Operand): Operand? {
             return try {
                 when (operator) {
-                    "*" -> {
-                        when (lhs) {
-                            is Operand.Number -> {
-                                when (rhs) {
-                                    is Operand.Number -> multiplyNumbers(lhs, rhs)
-                                    is Operand.Quantity -> Operand.Quantity(evaluateUnitExpression("${lhs.num} * ${rhs.quantity}"), NumberType.Float)
-                                    is Operand.Percentage -> {
-                                        val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
-                                        Operand.Number(xPercentOfLeftHandSide, lhs.type)
-                                    }
-                                }
-                            }
-                            is Operand.Quantity -> {
-                                when (rhs) {
-                                    is Operand.Quantity -> multiplyQuantities(lhs, rhs)
-                                    is Operand.Number -> null
-                                    is Operand.Percentage -> null
-                                }
-                            }
-                            is Operand.Percentage -> null
-                        }
-                    }
-                    "/" -> {
-                        when (lhs) {
-                            is Operand.Number -> {
-                                when (rhs) {
-                                    is Operand.Number -> divideNumbers(lhs, rhs)
-                                    is Operand.Quantity -> Operand.Quantity(evaluateUnitExpression("${lhs.num} / ${rhs.quantity}"), NumberType.Float)
-                                    is Operand.Percentage -> {
-                                        val x = lhs.num.toDouble() / rhs.num.toDouble() * 100
-                                        Operand.Number(x, lhs.type)
-                                    }
-                                }
-                            }
-                            is Operand.Quantity -> {
-                                when (rhs) {
-                                    is Operand.Quantity -> divideQuantities(lhs, rhs)
-                                    is Operand.Number -> null
-                                    is Operand.Percentage -> null
-                                }
-                            }
-                            is Operand.Percentage -> null
-                        }
-                    }
-                    "+" -> {
-                        when (lhs) {
-                            is Operand.Number -> {
-                                when (rhs) {
-                                    is Operand.Number -> addNumbers(lhs, rhs)
-                                    is Operand.Quantity -> null
-                                    is Operand.Percentage -> {
-                                        val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
-                                        Operand.Number(lhs.num.toDouble() + xPercentOfLeftHandSide, lhs.type)
-                                    }
-                                }
-                            }
-                            is Operand.Quantity -> {
-                                when (rhs) {
-                                    is Operand.Quantity -> addQuantities(lhs, rhs)
-                                    is Operand.Number -> null
-                                    is Operand.Percentage -> null
-                                }
-                            }
-                            is Operand.Percentage -> null
-                        }
-                    }
-                    "-" -> {
-                        when (lhs) {
-                            is Operand.Number -> {
-                                when (rhs) {
-                                    is Operand.Number -> subtractNumbers(lhs, rhs)
-                                    is Operand.Quantity -> null
-                                    is Operand.Percentage -> {
-                                        val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
-                                        Operand.Number(lhs.num.toDouble() - xPercentOfLeftHandSide, lhs.type)
-                                    }
-                                }
-                            }
-                            is Operand.Quantity -> {
-                                when (rhs) {
-                                    is Operand.Quantity -> subtractQuantities(lhs, rhs)
-                                    is Operand.Number -> null
-                                    is Operand.Percentage -> null
-                                }
-                            }
-                            is Operand.Percentage -> null
-                        }
-                    }
-                    "^" -> {
-                        when (lhs) {
-                            is Operand.Number -> {
-                                when (rhs) {
-                                    is Operand.Number -> Operand.Number(Math.pow(lhs.num.toDouble(), rhs.num.toDouble()), lhs.type)
-                                    is Operand.Quantity -> null
-                                    is Operand.Percentage -> null
-                                }
-                            }
-                            is Operand.Quantity -> {
-                                when (rhs) {
-                                    is Operand.Quantity -> null
-                                    is Operand.Number -> Operand.Quantity(lhs.quantity.pow(rhs.num.toDouble()), lhs.type)
-                                    is Operand.Percentage -> null
-                                }
-                            }
-                            is Operand.Percentage -> null
-                        }
-                    }
+                    "as a % of" -> asAPercentOfOperator(lhs, rhs)
+                    "on what is" -> onWhatIsOperator(lhs, rhs)
+                    "of what is" -> ofWhatIsOperator(lhs, rhs)
+                    "off what is" -> offWhatIsOperator(lhs, rhs)
+                    "*" -> multiplyOperator(lhs, rhs)
+                    "/" -> divideOperator(lhs, rhs)
+                    "+" -> plusOperator(lhs, rhs)
+                    "-" -> minusOperator(lhs, rhs)
+                    "^" -> powerOperator(lhs, rhs)
                     else -> null
                 }
             } catch (e: Throwable) {
                 console.error("${lhs.asString()}$operator${rhs.asString()}")
                 console.error(e)
                 null
+            }
+        }
+
+        private fun powerOperator(lhs: Operand, rhs: Operand): Operand? {
+            return when (lhs) {
+                is Operand.Number -> when (rhs) {
+                    is Operand.Number -> Operand.Number(Math.pow(lhs.num.toDouble(), rhs.num.toDouble()), lhs.type)
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> null
+                }
+                is Operand.Quantity -> when (rhs) {
+                    is Operand.Quantity -> null
+                    is Operand.Number -> Operand.Quantity(lhs.quantity.pow(rhs.num.toDouble()), lhs.type)
+                    is Operand.Percentage -> null
+                }
+
+                is Operand.Percentage -> null
+            }
+        }
+
+        private fun minusOperator(lhs: Operand, rhs: Operand): Operand? {
+            return when (lhs) {
+                is Operand.Number -> when (rhs) {
+                    is Operand.Number -> subtractNumbers(lhs, rhs)
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> {
+                        val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
+                        Operand.Number(lhs.num.toDouble() - xPercentOfLeftHandSide, lhs.type)
+                    }
+                }
+                is Operand.Quantity -> when (rhs) {
+                    is Operand.Quantity -> subtractQuantities(lhs, rhs)
+                    is Operand.Number -> null
+                    is Operand.Percentage -> null
+                }
+                is Operand.Percentage -> null
+            }
+        }
+
+        private fun plusOperator(lhs: Operand, rhs: Operand): Operand? {
+            return when (lhs) {
+                is Operand.Number -> when (rhs) {
+                    is Operand.Number -> addNumbers(lhs, rhs)
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> {
+                        val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
+                        Operand.Number(lhs.num.toDouble() + xPercentOfLeftHandSide, lhs.type)
+                    }
+                }
+                is Operand.Quantity -> when (rhs) {
+                    is Operand.Quantity -> addQuantities(lhs, rhs)
+                    is Operand.Number -> null
+                    is Operand.Percentage -> null
+                }
+                is Operand.Percentage -> when (rhs) {
+                    is Operand.Quantity -> null
+                    is Operand.Number -> null
+                    is Operand.Percentage -> Operand.Percentage(lhs.num.toDouble() + rhs.num.toDouble(), lhs.type)
+                }
+            }
+        }
+
+        private fun divideOperator(lhs: Operand, rhs: Operand): Operand? {
+            return when (lhs) {
+                is Operand.Number -> when (rhs) {
+                    is Operand.Number -> divideNumbers(lhs, rhs)
+                    is Operand.Quantity -> Operand.Quantity(evaluateUnitExpression("${lhs.num} / ${rhs.quantity}"), NumberType.Float)
+                    is Operand.Percentage -> {
+                        val x = lhs.num.toDouble() / rhs.num.toDouble() * 100
+                        Operand.Number(x, lhs.type)
+                    }
+                }
+
+                is Operand.Quantity -> when (rhs) {
+                    is Operand.Quantity -> divideQuantities(lhs, rhs)
+                    is Operand.Number -> null
+                    is Operand.Percentage -> null
+                }
+
+                is Operand.Percentage -> null
+
+            }
+        }
+
+        private fun multiplyOperator(lhs: Operand, rhs: Operand): Operand? {
+            return when (lhs) {
+                is Operand.Number -> when (rhs) {
+                    is Operand.Number -> multiplyNumbers(lhs, rhs)
+                    is Operand.Quantity -> Operand.Quantity(evaluateUnitExpression("${lhs.num} * ${rhs.quantity}"), NumberType.Float)
+                    is Operand.Percentage -> {
+                        val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
+                        Operand.Number(xPercentOfLeftHandSide, lhs.type)
+                    }
+                }
+
+                is Operand.Quantity -> when (rhs) {
+                    is Operand.Quantity -> multiplyQuantities(lhs, rhs)
+                    is Operand.Number -> null
+                    is Operand.Percentage -> null
+                }
+                is Operand.Percentage -> null
+            }
+        }
+
+        private fun asAPercentOfOperator(lhs: Operand, rhs: Operand): Operand.Percentage? {
+            return when (lhs) {
+                is Operand.Number -> when (rhs) {
+                    is Operand.Number -> {
+                        Operand.Percentage(lhs.num.toDouble() / rhs.num.toDouble() * 100, NumberType.Float)
+                    }
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> null
+                }
+
+                is Operand.Quantity -> when (rhs) {
+                    is Operand.Number -> null
+                    is Operand.Quantity -> {
+                        Operand.Percentage(lhs.toRawNumber() / rhs.toRawNumber() * 100, NumberType.Float)
+                    }
+                    is Operand.Percentage -> null
+                }
+                is Operand.Percentage -> null
+            }
+        }
+
+        private fun onWhatIsOperator(lhs: Operand, rhs: Operand): Operand.Number? {
+            return when (lhs) {
+                is Operand.Number -> null
+                is Operand.Quantity -> null
+                is Operand.Percentage -> when (rhs) {
+                    is Operand.Number -> {
+                        // lhs% on what is rhs
+                        Operand.Number(rhs.num.toDouble() / (1 + (lhs.num.toDouble() / 100)), NumberType.Float)
+                    }
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> null
+                }
+            }
+        }
+
+        private fun ofWhatIsOperator(lhs: Operand, rhs: Operand): Operand.Number? {
+            return when (lhs) {
+                is Operand.Number -> null
+                is Operand.Quantity -> null
+                is Operand.Percentage -> when (rhs) {
+                    is Operand.Number -> {
+                        // lhs% of what is rhs
+                        Operand.Number(rhs.num.toDouble() / (lhs.num.toDouble() / 100), NumberType.Float)
+                    }
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> null
+                }
+            }
+        }
+
+        private fun offWhatIsOperator(lhs: Operand, rhs: Operand): Operand.Number? {
+            return when (lhs) {
+                is Operand.Number -> null
+                is Operand.Quantity -> null
+                is Operand.Percentage -> when (rhs) {
+                    is Operand.Number -> {
+                        // lhs% off what is rhs
+                        Operand.Number(rhs.num.toDouble() / (1 - (lhs.num.toDouble() / 100)), NumberType.Float)
+                    }
+                    is Operand.Quantity -> null
+                    is Operand.Percentage -> null
+                }
             }
         }
 
@@ -898,7 +971,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         data class FunctionDefinition(val name: String, val argumentNames: List<String>,
                                       val tokenLines: List<LineAndTokens>)
 
-        private fun parse(text: String, variableNames: Iterable<String> = emptyList(), functionNames : Iterable<String> = emptyList()): List<Token> {
+        private fun parse(text: String, variableNames: Iterable<String> = emptyList(), functionNames: Iterable<String> = emptyList()): List<Token> {
             val tokens = arrayListOf<Token>()
             var str = text.trim()
             while (str.isNotEmpty()) {
@@ -1015,7 +1088,16 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             assertEq("30 km", "(10+20)km")
             assertEq("7500 m", "10(km/h) * 45min in m")
             assertEq("500 kg", "200kg alma + 300 kg banán")
-            assertEq(15, "(1 alma + 4 körte) * 3 ember")
+            assertEq(Operand.Number(15), "(1 alma + 4 körte) * 3 ember")
+            assertEq(Operand.Percentage(5), "10 as a % of 200")
+            assertEq(Operand.Percentage(30), "10% + 20%")
+            assertEq(Operand.Number(220), "200 + 10%")
+            assertEq(Operand.Number(180), "200 - 10%")
+            assertEq(Operand.Number(20), "200 * 10%")
+
+            assertEq(Operand.Number(181.82, NumberType.Float), "10% on what is $200")
+            assertEq(Operand.Number(2000), "10% of what is $200")
+            assertEq(Operand.Number(222.22, NumberType.Float), "10% off what is $200")
 
             assertTokenListEq(parse("I traveled with 45km/h for / 13km in min"),
                     str("I"),
@@ -1035,17 +1117,17 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             assertEq("19.5 min", "I traveled 13km / at a rate 40km/h in min")
             assertEq("12 mile/h", "I traveled 24 miles and rode my bike  / 2 hours")
             assertEq("40 mile", "Now let's say you rode your bike at a rate of 10 miles/h for * 4 h")
-            assertEq(9, "12-3")
-            assertEq(1027, "2^10 + 3")
-            assertEq(163, "1+2*3^4")
+            assertEq(Operand.Number(9), "12-3")
+            assertEq(Operand.Number(1027), "2^10 + 3")
+            assertEq(Operand.Number(163), "1+2*3^4")
             assertEq("0.5s", "1/2s")
             assertEq("0.5s", "1/(2s)")
-            assertEq(60, "15 EUR adómentes azaz 75-15 euróból kell adózni")
+            assertEq(Operand.Number(60), "15 EUR adómentes azaz 75-15 euróból kell adózni")
             assertEq("0.529 GB / seconds", "transfer of around 1.587GB in about / 3 seconds")
             assertEq("37.5 MB", "A is a unit but should not be handled here so... 37.5MB of DNA information in it.")
-            assertEq(1000, "3k - 2k")
-            assertEq(1000000, "3M - 2M")
-            assertEq(100, "1GB / 10MB")
+            assertEq(Operand.Number(1000), "3k - 2k")
+            assertEq(Operand.Number(1000000), "3M - 2M")
+            assertEq(Operand.Number(100), "1GB / 10MB")
         }
     }
 }
@@ -1059,7 +1141,7 @@ sealed class Operand {
     abstract fun asString(): String
     abstract fun toRawNumber(): Double
 
-    class Percentage(val num: kotlin.Number, val type: NumberType) : Operand() {
+    class Percentage(val num: kotlin.Number, val type: NumberType = if (num is Int) NumberType.Int else NumberType.Float) : Operand() {
         override fun asString(): String = this.num.toString()
 
 
@@ -1084,7 +1166,7 @@ sealed class Operand {
         }
     }
 
-    class Number(val num: kotlin.Number, val type: NumberType) : Operand() {
+    class Number(val num: kotlin.Number, val type: NumberType = if (num is Int) NumberType.Int else NumberType.Float) : Operand() {
         override fun asString(): String = this.num.toString()
 
         override fun toRawNumber(): Double = num.toDouble()
@@ -1285,7 +1367,15 @@ fun tryExtractNumberLiteral(str: String): Pair<Token, String>? {
 }
 
 private fun tryExtractOperator(str: String): Pair<Token, String>? {
-    return if (str.first() in "=+-/%*^()&|!") {
+    return if (str.startsWith("on what is")) {
+        Token.Operator("on what is") to str.drop("on what is".length)
+    } else if (str.startsWith("of what is")) {
+        Token.Operator("of what is") to str.drop("of what is".length)
+    } else if (str.startsWith("off what is")) {
+        Token.Operator("off what is") to str.drop("off what is".length)
+    } else if (str.startsWith("as a % of")) {
+        Token.Operator("as a % of") to str.drop("as a % of".length)
+    } else if (str.first() in "=+-/%*^()&|!") {
         Token.Operator(str.first().toString()) to str.drop(1)
     } else if (str.startsWith("in ")) {
         Token.Operator("in") to str.drop(2)
@@ -1306,12 +1396,12 @@ fun Char.isDigit(): Boolean = this in "0123456789"
 
 private fun tryExtractUnit(str: String): Pair<Token, String>? {
     val piece = str.takeWhile(Char::isLetter)
-    try {
+    return try {
         val unit = parseUnitName("1 $piece")
-        return Token.UnitOfMeasure(unit.toString().drop("1 ".length)) to str.drop(piece.length)
+        Token.UnitOfMeasure(unit.toString().drop("1 ".length)) to str.drop(piece.length)
     } catch (e: Throwable) {
+        null
     }
-    return null
 }
 
 private fun tryExtractStringLiteral(str: String): Pair<Token, String>? {
