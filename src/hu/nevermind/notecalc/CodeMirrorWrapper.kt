@@ -2,7 +2,7 @@ package hu.nevermind.notecalc
 
 import org.w3c.dom.Element
 
-object CodeMirror {
+object CodeMirrorWrapper {
     fun enableAutocompletion() {
         js("CodeMirror").registerHelper("hint", "notecalc", { cm: dynamic, options: dynamic ->
             val cur = cm.getCursor()

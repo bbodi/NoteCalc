@@ -1,20 +1,18 @@
 package hu.nevermind.notecalc
 
 import org.w3c.dom.Storage
+import org.w3c.dom.get
 import kotlin.browser.document
 import kotlin.browser.localStorage
 import kotlin.browser.window
-import kotlin.dom.childElements
-import kotlin.dom.removeFromParent
 
 
-@native class Assert {
-    fun ok(expr: Boolean, msg: String = "")
-    fun <T> equal(actual: T, expected: T, msg: String = "")
+external class Assert {
+    fun ok(expr: Boolean, msg: String)
+    fun <T> equal(actual: T, expected: T)
 }
 
-@native
-object QUnit {
+external object QUnit {
     fun test(name: String, testFunc: (Assert) -> Unit)
 }
 
@@ -46,7 +44,9 @@ private fun createNoteCalcEditors(allNoteCalcEntries: List<Int>) {
                 if (visible) {
                     addNewEditorRow(noteCalcIndex, globalVariables)
                 } else {
-                    document.getElementById(editorDivId(noteCalcIndex))?.removeFromParent()
+                    document.getElementById(editorDivId(noteCalcIndex))?.apply {
+                        parentNode?.removeChild(this)
+                    }
                 }
                 localStorage.setNoteCaclcVisibility(noteCalcIndex, visible.toString())
             }
@@ -57,7 +57,7 @@ private fun createNoteCalcEditors(allNoteCalcEntries: List<Int>) {
                     val title = loadTitleOr(nextNoteCalcIndex, UNNAMED_TITLE)
                     innerHTML = """<a href="#" onclick="onHideButtonClick$noteCalcIndex(true)">$title</a>"""
                 }
-                document.getElementsByTagName("body")[0]!!.appendChild(li.childElements().first())
+                document.getElementsByTagName("body")[0]!!.appendChild(li.children[0]!!)
             }
             if (noteCalcIndex >= nextNoteCalcIndex) {
                 nextNoteCalcIndex = noteCalcIndex + 1
@@ -68,7 +68,7 @@ private fun createNoteCalcEditors(allNoteCalcEntries: List<Int>) {
 
 val addButtonClicked = {
     val allNoteCalcEntries = localStorage.getAllNoteCalcEntries()
-    localStorage.set(NOTE_CALC_IDS_KEY, (allNoteCalcEntries + nextNoteCalcIndex).joinToString(","))
+    localStorage.setItem(NOTE_CALC_IDS_KEY, (allNoteCalcEntries + nextNoteCalcIndex).joinToString(","))
     localStorage.setNoteCalcTitle(nextNoteCalcIndex, loadTitleOr(nextNoteCalcIndex, UNNAMED_TITLE))
     localStorage.setNoteCaclcVisibility(nextNoteCalcIndex, "true")
     addNewEditorRow(nextNoteCalcIndex, globalVariables)
@@ -119,30 +119,30 @@ private fun addNewEditorRow(editorIndex: Int, globalVariables: MutableMap<String
     }, 500)
 }
 
-private fun Storage.getAllNoteCalcEntries(): List<Int> = (this.get(NOTE_CALC_IDS_KEY) ?: "").split(',').filter(String::isNotEmpty).map { parseInt(it) }
+private fun Storage.getAllNoteCalcEntries(): List<Int> = (this.getItem(NOTE_CALC_IDS_KEY) ?: "").split(',').filter(String::isNotEmpty).map(String::toInt)
 
 private fun Storage.getNoteCaclcVisibility(noteCalcIndex: Int): String? {
-    return this.get(noteCaclcVisibleKey(noteCalcIndex))
+    return this.getItem(noteCaclcVisibleKey(noteCalcIndex))
 }
 
 private fun Storage.setNoteCaclcVisibility(noteCalcIndex: Int, text: String) {
-    this.set(noteCaclcVisibleKey(noteCalcIndex), text)
+    this.setItem(noteCaclcVisibleKey(noteCalcIndex), text)
 }
 
 private fun Storage.getNoteCalcTitle(noteCalcIndex: Int): String? {
-    return this.get(noteCalcTitleKey(noteCalcIndex))
+    return this.getItem(noteCalcTitleKey(noteCalcIndex))
 }
 
 private fun Storage.setNoteCalcTitle(noteCalcIndex: Int, text: String) {
-    this.set(noteCalcTitleKey(noteCalcIndex), text)
+    this.setItem(noteCalcTitleKey(noteCalcIndex), text)
 }
 
 private fun Storage.getNoteCalcContent(noteCalcIndex: Int): String? {
-    return this.get(noteCalcContentKey(noteCalcIndex))
+    return this.getItem(noteCalcContentKey(noteCalcIndex))
 }
 
 private fun Storage.setNoteCalcContent(noteCalcIndex: Int, text: String) {
-    this.set(noteCalcContentKey(noteCalcIndex), text)
+    this.setItem(noteCalcContentKey(noteCalcIndex), text)
 }
 
 private fun Storage.removeNoteCalcContent(noteCalcIndex: Int) {
@@ -150,13 +150,13 @@ private fun Storage.removeNoteCalcContent(noteCalcIndex: Int) {
 }
 
 
-private fun noteCalcContentKey(editorIndex: Int) = "noteCalcContent$editorIndex"
+private fun noteCalcContentKey(editorIndex: Int): String = "noteCalcContent$editorIndex"
 
-private fun editorDivId(editorIndex: Int) = "NoteCalcPanel$editorIndex"
+private fun editorDivId(editorIndex: Int): String = "NoteCalcPanel$editorIndex"
 
-private fun noteCalcTitleKey(editorIndex: Int) = "storedNoteCalcTitle$editorIndex"
+private fun noteCalcTitleKey(editorIndex: Int): String = "storedNoteCalcTitle$editorIndex"
 
-private fun noteCaclcVisibleKey(editorIndex: Int) = "storedNoteCalcVisible$editorIndex"
+private fun noteCaclcVisibleKey(editorIndex: Int): String = "storedNoteCalcVisible$editorIndex"
 
 const val defaultText: String = """==========================================================
 ========================== Welcome =======================

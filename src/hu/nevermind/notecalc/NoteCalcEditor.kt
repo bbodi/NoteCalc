@@ -1,8 +1,8 @@
 package hu.nevermind.notecalc
 
 import org.w3c.dom.Element
-import java.util.*
 import kotlin.browser.window
+import kotlin.js.Math
 
 
 class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
@@ -17,8 +17,8 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         get() = variables + globalVariables
 
     init {
-        CodeMirror.defineTokenizer(tokenizer)
-        CodeMirror.enableAutocompletion()
+        CodeMirrorWrapper.defineTokenizer(tokenizer)
+        CodeMirrorWrapper.enableAutocompletion()
         val codeMirrorInstance = createMainCodeMirrorInstance(editorTextArea)
         val resultsCodeMirrorInstance = createCodeMirrorInstanceForResults(resultTextArea)
         resultsCodeMirrorInstance.setValue(textAreaChanged(defaultValue))
@@ -202,7 +202,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
                 onChange(codeMirrorInstance.getValue())
                 val scrollInfo = codeMirrorInstance.getScrollInfo()
                 resultsCodeMirrorInstance.scrollTo(scrollInfo.left, scrollInfo.top)
-            }, 500)
+            }, 200)
             0
         }
     }
@@ -244,7 +244,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
     }
 
     private fun createCodeMirrorInstanceForResults(resultTextArea: Element): dynamic {
-        val resultsCodeMirrorInstance = CodeMirror.fromTextArea(resultTextArea, object {
+        val resultsCodeMirrorInstance = CodeMirrorWrapper.fromTextArea(resultTextArea, object {
             val mode = "c"
             val styleActiveLine = true
             val lineNumbers = true
@@ -254,12 +254,12 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
     }
 
     private fun createMainCodeMirrorInstance(editorTextArea: Element): dynamic {
-        val codeMirrorInstance = CodeMirror.fromTextArea(editorTextArea, object {
+        val codeMirrorInstance = CodeMirrorWrapper.fromTextArea(editorTextArea, object {
             val mode = "notecalc"
             val styleActiveLine = true
             val lineNumbers = true
-            val extraKeys = createObjectWithFields {
-                this["Ctrl-Space"] = "autocomplete"
+            val extraKeys = createObjectWithFields { js ->
+                js["Ctrl-Space"] = "autocomplete"
             }
             val noteCalcEditor = this@NoteCalcEditor
             val highlightSelectionMatches = object {
@@ -272,9 +272,9 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         return codeMirrorInstance
     }
 
-    private fun createObjectWithFields(initializer: dynamic.() -> Unit): dynamic {
+    private fun createObjectWithFields(initializer: (dynamic) -> Unit): dynamic {
         val jsObj = object {}.asDynamic()
-        initializer.initializer()
+        initializer(jsObj)
         return jsObj
     }
 
@@ -310,7 +310,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         fun assertEq(expectedValue: String, actualInput: String) {
             QUnit.test(actualInput) { assert ->
                 val actual = processPostfixNotationStack(shuntingYard(mergeCompoundUnitsAndUnaryMinusOperators(parse(actualInput)), emptyList()), emptyMap(), emptyMap())!! as Operand.Quantity
-                assert.ok(parseUnitName(expectedValue).equals(actual.quantity),
+                assert.ok(MathJs.parseUnitName(expectedValue).equals(actual.quantity),
                         "$expectedValue != $actual")
             }
         }
@@ -347,15 +347,6 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
                     } else quantitativeStack
                 }
                 is Token.UnitOfMeasure -> {
-                    val topOfStack = quantitativeStack.lastOrNull()
-                    if (topOfStack != null && topOfStack is Operand.Number) {
-                        quantitativeStack.dropLast(1) + addUnitToTheTopOfStackEntry(topOfStack, incomingToken)
-                    } else {
-                        lastUnit = incomingToken.unitName
-                        quantitativeStack
-                    }
-                }
-                is Token.CompoundUnit -> {
                     val topOfStack = quantitativeStack.lastOrNull()
                     if (topOfStack != null && topOfStack is Operand.Number) {
                         quantitativeStack.dropLast(1) + addUnitToTheTopOfStackEntry(topOfStack, incomingToken)
@@ -529,7 +520,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             return when (lhs) {
                 is Operand.Number -> when (rhs) {
                     is Operand.Number -> divideNumbers(lhs, rhs)
-                    is Operand.Quantity -> Operand.Quantity(evaluateUnitExpression("${lhs.num} / ${rhs.quantity}"), NumberType.Float)
+                    is Operand.Quantity -> Operand.Quantity(MathJs.evaluateUnitExpression("${lhs.num} / ${rhs.quantity}"), NumberType.Float)
                     is Operand.Percentage -> {
                         val x = lhs.num.toDouble() / rhs.num.toDouble() * 100
                         Operand.Number(x, lhs.type)
@@ -551,7 +542,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             return when (lhs) {
                 is Operand.Number -> when (rhs) {
                     is Operand.Number -> multiplyNumbers(lhs, rhs)
-                    is Operand.Quantity -> Operand.Quantity(evaluateUnitExpression("${lhs.num} * ${rhs.quantity}"), NumberType.Float)
+                    is Operand.Quantity -> Operand.Quantity(MathJs.evaluateUnitExpression("${lhs.num} * ${rhs.quantity}"), NumberType.Float)
                     is Operand.Percentage -> {
                         val xPercentOfLeftHandSide = lhs.num.toDouble() / 100 * rhs.num.toDouble()
                         Operand.Number(xPercentOfLeftHandSide, lhs.type)
@@ -676,7 +667,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
 
         private fun addUnitToTheTopOfStackEntry(targetNumber: Operand.Number, token: Token.UnitOfMeasure): Operand.Quantity {
             val number: Number = targetNumber.num
-            val newQuantityWithUnit = parseUnitName("$number ${token.unitName}")
+            val newQuantityWithUnit = MathJs.parseUnitName("$number ${token.unitName}")
             return Operand.Quantity(newQuantityWithUnit, targetNumber.type)
         }
 
@@ -684,8 +675,8 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
                                 val func: (lhs: Any, rhs: Any) -> Token?)
 
         private fun getUnitnameAfterOperation(lhsUnitname: String, rhsUnitname: String, func: (lhs: Quantity, rhs: Quantity) -> Any): String {
-            val lhs = parseUnitName("1 $lhsUnitname")
-            val rhs = parseUnitName("1 $rhsUnitname")
+            val lhs = MathJs.parseUnitName("1 $lhsUnitname")
+            val rhs = MathJs.parseUnitName("1 $rhsUnitname")
             val unitnameAfterOperation = func(lhs, rhs).toString().drop("1 ".length)
             return unitnameAfterOperation
         }
@@ -695,7 +686,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
                 "^" to OperatorInfo(5, "right") { lhs, rhs ->
                     if (lhs is Token.UnitOfMeasure && rhs is Token.NumberLiteral) {
                         val num = rhs.num
-                        val poweredUnit = parseUnitName("1 ${lhs.unitName}").pow(num)
+                        val poweredUnit = MathJs.parseUnitName("1 ${lhs.unitName}").pow(num)
                         val poweredUnitname = poweredUnit.toString().drop("1 ".length)
                         Token.UnitOfMeasure(poweredUnitname)
                     } else {
@@ -895,11 +886,12 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
                         highlightInfosForTokens.add(HighlightedText(token.operator, "operator"))
                     }
                     is Token.UnitOfMeasure -> {
-                        highlightInfosForTokens.add(HighlightedText(token.unitName, "qualifier"))
-                    }
-                    is Token.CompoundUnit -> {
-                        token.tokens.forEach { subTokenInCompoundUnit ->
-                            highlightInfosForTokens.add(HighlightedText(getStringRepresentation(subTokenInCompoundUnit), "qualifier"))
+                        if (token.tokens.isEmpty()) {
+                            highlightInfosForTokens.add(HighlightedText(token.unitName, "qualifier"))
+                        } else {
+                            token.tokens.forEach { subTokenInCompoundUnit ->
+                                highlightInfosForTokens.add(HighlightedText(getStringRepresentation(subTokenInCompoundUnit), "qualifier"))
+                            }
                         }
                     }
                 }
@@ -918,7 +910,7 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             return text
         }
 
-        private fun parseCompundUnit(tokens: List<Token>): Token.CompoundUnit? {
+        private fun parseCompundUnit(tokens: List<Token>): Token.UnitOfMeasure? {
             if (tokens.size <= 1) {
                 return null
             }
@@ -942,15 +934,15 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             return null
         }
 
-        private fun tryFindCorrectCompoundUnit(tokenGroup: List<Token>): Token.CompoundUnit? {
+        private fun tryFindCorrectCompoundUnit(tokenGroup: List<Token>): Token.UnitOfMeasure? {
             val expressionString = tokenGroup.joinToString(transform = Token::asString, separator = "")
             try {
-                val compundUnit = parseUnitName("1 $expressionString")
+                val compundUnit = MathJs.parseUnitName("1 $expressionString")
                 val compundUnitname = compundUnit.toString().drop("1 ".length).replace(" ", "")
                 if (compundUnitname != expressionString) {
                     return null
                 }
-                return Token.CompoundUnit(compundUnitname, tokenGroup)
+                return Token.UnitOfMeasure(compundUnitname, tokenGroup)
             } catch (e: Throwable) {
                 return tryFindCorrectCompoundUnit(tokenGroup.dropLast(1))
             }
@@ -959,12 +951,23 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
         private fun assertTokenListEq(actualTokens: List<Token>, vararg expectedTokens: Token) {
             QUnit.test("") { assert ->
                 assert.equal(actualTokens.size, expectedTokens.size)
-                expectedTokens.zip(actualTokens).forEach { p ->
-                    val (expected, actual) = p
-                    assert.ok(expected.equals(actual), "expected: $expected but was: $actual")
+                expectedTokens.zip(actualTokens).forEach { (expected, actual) ->
+                    val ok = when (expected) {
+                        is Token.NumberLiteral -> {
+                            when (expected.type) {
+                                NumberType.Int -> expected.num.toInt() == (actual as Token.NumberLiteral).num.toInt()
+                                NumberType.Float -> compareFloats(actual, expected, decimalCount = 2)
+                            }
+                        }
+                        is Token.UnitOfMeasure -> expected.unitName == (actual as Token.UnitOfMeasure).unitName
+                        else -> expected.equals(actual)
+                    }
+                    assert.ok(ok, "expected: $expected but was: $actual")
                 }
             }
         }
+
+        private fun compareFloats(actual: Token, expected: Token.NumberLiteral, decimalCount: Int) = (expected.num.toFloat() * Math.pow(10.0, decimalCount.toDouble())).toInt() == ((actual as Token.NumberLiteral).num.toFloat() * 100).toInt()
 
         data class LineAndTokens(val line: String, val postfixNotationStack: List<Token>)
 
@@ -1015,7 +1018,6 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             fun op(n: String) = Token.Operator(n)
             fun str(n: String) = Token.StringLiteral(n)
             fun unit(n: String) = Token.UnitOfMeasure(n)
-            fun compoundUnit(n: String) = Token.CompoundUnit(n, emptyList())
 
             assertTokenListEq(parse("1+2.0"),
                     num(1),
@@ -1070,11 +1072,11 @@ class NoteCalcEditor(defaultValue: String, editorTextArea: Element,
             )
             assertTokenListEq(mergeCompoundUnitsAndUnaryMinusOperators(parse("12km/h")),
                     num(12),
-                    compoundUnit("km/h")
+                    unit("km/h")
             )
             assertTokenListEq(mergeCompoundUnitsAndUnaryMinusOperators(parse("12km/h*3")),
                     num(12),
-                    compoundUnit("km/h"),
+                    unit("km/h"),
                     op("*"),
                     num(3)
             )
@@ -1141,178 +1143,47 @@ sealed class Operand {
     abstract fun asString(): String
     abstract fun toRawNumber(): Double
 
-    class Percentage(val num: kotlin.Number, val type: NumberType = if (num is Int) NumberType.Int else NumberType.Float) : Operand() {
+    data class Percentage(val num: kotlin.Number, val type: NumberType = if (num is Int) NumberType.Int else NumberType.Float) : Operand() {
         override fun asString(): String = this.num.toString()
-
-
         override fun toRawNumber(): Double = num.toDouble()
-
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as Percentage
-            if (num != other.num) return false
-            if (type != other.type) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = num.hashCode()
-            result = 31 * result + type.hashCode()
-            return result
-        }
     }
 
-    class Number(val num: kotlin.Number, val type: NumberType = if (num is Int) NumberType.Int else NumberType.Float) : Operand() {
+    data class Number(val num: kotlin.Number, val type: NumberType = if (num is Int) NumberType.Int else NumberType.Float) : Operand() {
         override fun asString(): String = this.num.toString()
-
         override fun toRawNumber(): Double = num.toDouble()
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as Number
-
-            if (num != other.num) return false
-            if (type != other.type) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = num.hashCode()
-            result = 31 * result + type.hashCode()
-            return result
-        }
     }
 
-    class Quantity(val quantity: hu.nevermind.notecalc.Quantity, val type: NumberType) : Operand() {
+    data class Quantity(val quantity: hu.nevermind.notecalc.Quantity, val type: NumberType) : Operand() {
         override fun asString(): String = this.quantity.toString()
 
         override fun toRawNumber(): Double = quantity.toNumber().toDouble()
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as Quantity
-
-            if (!quantity.equals(other.quantity)) return false
-            if (type != other.type) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = quantity.hashCode()
-            result = 31 * result + type.hashCode()
-            return result
-        }
     }
 }
 
 sealed class Token {
-    open class UnitOfMeasure(val unitName: String) : Token() {
-
+    data class UnitOfMeasure(val unitName: String, val tokens: List<Token> = emptyList()) : Token() {
         override fun asString(): CharSequence = unitName
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as UnitOfMeasure
-
-            if (unitName != other.unitName) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return unitName.hashCode()
-        }
-
         override fun toString() = "Unit($unitName)"
-
     }
 
-    class CompoundUnit(unitName: String, val tokens: List<Token>) : UnitOfMeasure(unitName) {
-
-        override fun toString() = "CompoundUnit($unitName)"
-
-    }
-
-    class StringLiteral(val str: String) : Token() {
+    data class StringLiteral(val str: String) : Token() {
         override fun asString(): CharSequence = str
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as StringLiteral
-
-            if (str != other.str) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return str.hashCode()
-        }
-
         override fun toString() = "Str($str)"
-
     }
 
-    class Variable(val variableName: String) : Token() {
+    data class Variable(val variableName: String) : Token() {
         override fun asString(): CharSequence = variableName
         override fun toString() = "Var($variableName)"
     }
 
-    class NumberLiteral(val num: Number, val originalStringRepresentation: String, val type: NumberType) : Token() {
+    data class NumberLiteral(val num: Number, val originalStringRepresentation: String, val type: NumberType) : Token() {
         override fun asString(): CharSequence = num.toString()
         override fun toString(): String = "Num($num)"
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as NumberLiteral
-
-            if (num != other.num) return false
-            if (type != other.type) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = num.hashCode()
-            result = 31 * result + type.hashCode()
-            return result
-        }
-
     }
 
-    class Operator(val operator: String) : Token() {
+    data class Operator(val operator: String) : Token() {
         override fun asString(): CharSequence = operator
         override fun toString(): String = "Op($operator)"
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other?.jsClass != jsClass) return false
-
-            other as Operator
-
-            if (operator != other.operator) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return operator.hashCode()
-        }
-
     }
 
     abstract fun asString(): CharSequence
@@ -1336,7 +1207,7 @@ fun tryExtractNumberLiteral(str: String): Pair<Token, String>? {
         if (numStr.isEmpty()) {
             null
         } else {
-            val num = parseInt(numStr.replace(" ", ""), 2)
+            val num = numStr.replace(" ", "").toInt(2)
             val rest = str.drop(2 + numStr.length)
             Token.NumberLiteral(num, "0b" + numStr, NumberType.Int) to rest
         }
@@ -1347,7 +1218,7 @@ fun tryExtractNumberLiteral(str: String): Pair<Token, String>? {
         if (numStr.isEmpty()) {
             null
         } else {
-            val num = parseInt(numStr.replace(" ", ""), 16)
+            val num = numStr.replace(" ", "").toInt(16)
             val rest = str.drop(2 + numStr.length)
             Token.NumberLiteral(num, "0x" + numStr, NumberType.Int) to rest
         }
@@ -1357,7 +1228,7 @@ fun tryExtractNumberLiteral(str: String): Pair<Token, String>? {
         }
         val decimalPointCount = numStr.count { it == '.' }
         if (decimalPointCount <= 1) {
-            val num = safeParseDouble(numStr.replace(" ", ""))!!
+            val num = numStr.replace(" ", "").toDouble()
             val rest = str.drop(numStr.length)
             Token.NumberLiteral(num, numStr, if (decimalPointCount == 0) NumberType.Int else NumberType.Float) to rest
         } else null
@@ -1397,7 +1268,7 @@ fun Char.isDigit(): Boolean = this in "0123456789"
 private fun tryExtractUnit(str: String): Pair<Token, String>? {
     val piece = str.takeWhile(Char::isLetter)
     return try {
-        val unit = parseUnitName("1 $piece")
+        val unit = MathJs.parseUnitName("1 $piece")
         Token.UnitOfMeasure(unit.toString().drop("1 ".length)) to str.drop(piece.length)
     } catch (e: Throwable) {
         null
