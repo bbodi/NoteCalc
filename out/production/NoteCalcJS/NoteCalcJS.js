@@ -5,7 +5,19 @@ var NoteCalcJS = function (_, Kotlin) {
   'use strict';
   var startsWith = Kotlin.kotlin.text.startsWith_sgbm27$;
   var contains = Kotlin.kotlin.text.contains_li3zpu$;
+  var lastOrNull = Kotlin.kotlin.collections.lastOrNull_2p1efm$;
+  var Throwable = Error;
+  var asReversed = Kotlin.kotlin.collections.asReversed_2p1efm$;
+  var first = Kotlin.kotlin.collections.first_2p1efm$;
   var plus = Kotlin.kotlin.collections.plus_qloxvw$;
+  var contains_0 = Kotlin.kotlin.collections.contains_2ws7j4$;
+  var drop = Kotlin.kotlin.collections.drop_ba2ldo$;
+  var last = Kotlin.kotlin.collections.last_2p1efm$;
+  var dropLast = Kotlin.kotlin.collections.dropLast_yzln2o$;
+  var takeLast = Kotlin.kotlin.collections.takeLast_yzln2o$;
+  var drop_0 = Kotlin.kotlin.text.drop_6ic1pp$;
+  var to = Kotlin.kotlin.to_ujzrz7$;
+  var hashMapOf = Kotlin.kotlin.collections.hashMapOf_qfcya0$;
   var joinToString = Kotlin.kotlin.collections.joinToString_fmv235$;
   var split = Kotlin.kotlin.text.split_o64adg$;
   var toInt = Kotlin.kotlin.text.toInt_pdl1vz$;
@@ -13,10 +25,7 @@ var NoteCalcJS = function (_, Kotlin) {
   var StringBuilder = Kotlin.kotlin.text.StringBuilder;
   var lines = Kotlin.kotlin.text.lines_gw00vp$;
   var plus_1 = Kotlin.kotlin.collections.plus_khz7k3$;
-  var to = Kotlin.kotlin.to_ujzrz7$;
   var startsWith_0 = Kotlin.kotlin.text.startsWith_7epoxm$;
-  var lastOrNull = Kotlin.kotlin.collections.lastOrNull_2p1efm$;
-  var Throwable = Error;
   var firstOrNull = Kotlin.kotlin.text.firstOrNull_gw00vp$;
   var isWhitespace = Kotlin.kotlin.text.isWhitespace_myv2d0$;
   var emptyList = Kotlin.kotlin.collections.emptyList_287e2$;
@@ -24,28 +33,19 @@ var NoteCalcJS = function (_, Kotlin) {
   var indexOf_0 = Kotlin.kotlin.text.indexOf_8eortd$;
   var padEnd = Kotlin.kotlin.text.padEnd_vrc1nu$;
   var padStart = Kotlin.kotlin.text.padStart_vrc1nu$;
+  var getOrNull = Kotlin.kotlin.collections.getOrNull_yzln2o$;
+  var split_0 = Kotlin.kotlin.text.split_ip8yn$;
+  var Enum = Kotlin.kotlin.Enum;
   var emptyMap = Kotlin.kotlin.collections.emptyMap_q3lmfv$;
-  var first = Kotlin.kotlin.collections.first_2p1efm$;
-  var dropLast = Kotlin.kotlin.collections.dropLast_yzln2o$;
-  var drop = Kotlin.kotlin.text.drop_6ic1pp$;
-  var takeLast = Kotlin.kotlin.collections.takeLast_yzln2o$;
-  var zip = Kotlin.kotlin.collections.zip_45mdf7$;
+  var zip = Kotlin.kotlin.collections.zip_evp5ax$;
+  var zip_0 = Kotlin.kotlin.collections.zip_45mdf7$;
   var toMap = Kotlin.kotlin.collections.toMap_6hr0sd$;
   var HashMap_init = Kotlin.kotlin.collections.HashMap_init_73mtqc$;
-  var last = Kotlin.kotlin.collections.last_2p1efm$;
-  var drop_0 = Kotlin.kotlin.collections.drop_ba2ldo$;
-  var asReversed = Kotlin.kotlin.collections.asReversed_2p1efm$;
-  var contains_0 = Kotlin.kotlin.collections.contains_2ws7j4$;
   var contains_1 = Kotlin.kotlin.collections.contains_mjy6jw$;
   var replace = Kotlin.kotlin.text.replace_680rmw$;
-  var zip_0 = Kotlin.kotlin.collections.zip_evp5ax$;
   var first_0 = Kotlin.kotlin.text.first_gw00vp$;
   var contains_2 = Kotlin.kotlin.text.contains_sgbm27$;
   var get_lastIndex = Kotlin.kotlin.collections.get_lastIndex_55thoc$;
-  var getOrNull = Kotlin.kotlin.collections.getOrNull_yzln2o$;
-  var split_0 = Kotlin.kotlin.text.split_ip8yn$;
-  var hashMapOf_0 = Kotlin.kotlin.collections.hashMapOf_qfcya0$;
-  var Enum = Kotlin.kotlin.Enum;
   var toInt_0 = Kotlin.kotlin.text.toInt_6ic1pp$;
   var toDouble = Kotlin.kotlin.text.toDouble_pdl1vz$;
   NumberType.prototype = Object.create(Enum.prototype);
@@ -191,6 +191,370 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     return CodeMirrorWrapper_instance;
   }
+  function LineParser() {
+    this.tokenParser_0 = new TokenParser();
+    this.tokenListSimplifier_0 = new TokenListSimplifier();
+    this.operatorInfosForUnits_0 = hashMapOf([to('%', new LineParser$OperatorInfo(6, 'left', LineParser$operatorInfosForUnits$lambda)), to('^', new LineParser$OperatorInfo(5, 'right', LineParser$operatorInfosForUnits$lambda_0)), to('unit', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_1)), to('=', new LineParser$OperatorInfo(0, 'left', LineParser$operatorInfosForUnits$lambda_2)), to('+', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_3)), to('-', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_4)), to('*', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_5(this))), to('/', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_6(this)))]);
+  }
+  LineParser.prototype.parseProcessAndEvaulate_0 = function (functionNames, line, variableNames) {
+    var tmp$;
+    try {
+      var parsedTokens = this.tokenParser_0.parse_0(line, variableNames, functionNames);
+      var tokensWithMergedCompoundUnits = this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(parsedTokens);
+      var postFixNotationTokens = this.shuntingYard_0(tokensWithMergedCompoundUnits, functionNames);
+      var highlightingInfos = this.createHighlightingNamesForTokens_0(parsedTokens);
+      var lastToken = lastOrNull(postFixNotationTokens);
+      tmp$ = new LineParser$EvaulationResult(parsedTokens, tokensWithMergedCompoundUnits, postFixNotationTokens, highlightingInfos, lastToken);
+    }
+     catch (e) {
+      if (Kotlin.isType(e, Throwable)) {
+        tmp$ = null;
+      }
+       else
+        throw e;
+    }
+    return tmp$;
+  };
+  LineParser.prototype.shuntingYard_0 = function (inputTokens, functionNames) {
+    var output = Kotlin.kotlin.collections.emptyList_287e2$();
+    var operatorStack = Kotlin.kotlin.collections.emptyList_287e2$();
+    var tmp$ = this.shuntingYardRec_0(inputTokens, operatorStack, output, functionNames)
+    , newOperatorStack = tmp$.component1()
+    , newOutput = tmp$.component2();
+    var tmp$_0;
+    var accumulator = newOutput;
+    tmp$_0 = asReversed(newOperatorStack).iterator();
+    while (tmp$_0.hasNext()) {
+      var element = tmp$_0.next();
+      accumulator = this.applyOrPutOperatorOnTheStack_0(element, accumulator);
+    }
+    return accumulator;
+  };
+  LineParser.prototype.shuntingYardRec_0 = function (inputTokens, operatorStack, output, functionNames) {
+    var tmp$_0;
+    if (inputTokens.isEmpty()) {
+      return new LineParser$ShuntingYardStacks(operatorStack, output);
+    }
+     else {
+      var inputToken = first(inputTokens);
+      if (Kotlin.isType(inputToken, Token$Operator))
+        if (Kotlin.equals(inputToken.operator, '(')) {
+          tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, inputToken), output);
+        }
+         else if (Kotlin.equals(inputToken.operator, ')')) {
+          var modifiedStacksAfterBracketRule = this.popAnythingUntilOpeningBracket_0(operatorStack, output);
+          tmp$_0 = modifiedStacksAfterBracketRule;
+        }
+         else {
+          var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
+          , newOperatorStack = tmp$.component1()
+          , newOutput = tmp$.component2();
+          tmp$_0 = new LineParser$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
+        }
+       else if (Kotlin.isType(inputToken, Token$NumberLiteral))
+        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+      else if (Kotlin.isType(inputToken, Token$StringLiteral))
+        if (contains_0(functionNames, inputToken.str)) {
+          tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator('fun ' + inputToken.str)), plus(output, inputToken));
+        }
+         else if (Kotlin.equals(inputToken.str, ',')) {
+          tmp$_0 = this.shuntingYardOperatorRule_0(operatorStack, output, ',');
+        }
+         else {
+          tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        }
+       else if (Kotlin.isType(inputToken, Token$UnitOfMeasure)) {
+        this.shuntingYardOperatorRule_0(operatorStack, output, 'unit');
+        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+      }
+       else if (Kotlin.isType(inputToken, Token$Variable))
+        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+      else
+        tmp$_0 = Kotlin.noWhenBranchMatched();
+      var tmp$_1 = tmp$_0
+      , newOperatorStack_0 = tmp$_1.component1()
+      , newOutput_0 = tmp$_1.component2();
+      return this.shuntingYardRec_0(drop(inputTokens, 1), newOperatorStack_0, newOutput_0, functionNames);
+    }
+  };
+  function LineParser$ShuntingYardStacks(operatorStack, output) {
+    this.operatorStack = operatorStack;
+    this.output = output;
+  }
+  LineParser$ShuntingYardStacks.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'ShuntingYardStacks',
+    interfaces: []
+  };
+  LineParser$ShuntingYardStacks.prototype.component1 = function () {
+    return this.operatorStack;
+  };
+  LineParser$ShuntingYardStacks.prototype.component2 = function () {
+    return this.output;
+  };
+  LineParser$ShuntingYardStacks.prototype.copy_84mo7y$ = function (operatorStack, output) {
+    return new LineParser$ShuntingYardStacks(operatorStack === void 0 ? this.operatorStack : operatorStack, output === void 0 ? this.output : output);
+  };
+  LineParser$ShuntingYardStacks.prototype.toString = function () {
+    return 'ShuntingYardStacks(operatorStack=' + Kotlin.toString(this.operatorStack) + (', output=' + Kotlin.toString(this.output)) + ')';
+  };
+  LineParser$ShuntingYardStacks.prototype.hashCode = function () {
+    var result = 0;
+    result = result * 31 + Kotlin.hashCode(this.operatorStack) | 0;
+    result = result * 31 + Kotlin.hashCode(this.output) | 0;
+    return result;
+  };
+  LineParser$ShuntingYardStacks.prototype.equals = function (other) {
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.operatorStack, other.operatorStack) && Kotlin.equals(this.output, other.output)))));
+  };
+  LineParser.prototype.popAnythingUntilOpeningBracket_0 = function (operatorStack, output) {
+    if (operatorStack.isEmpty()) {
+      return new LineParser$ShuntingYardStacks(operatorStack, output);
+    }
+     else {
+      var topOfOpStack = last(operatorStack);
+      var newOperatorStack = dropLast(operatorStack, 1);
+      if (Kotlin.equals(topOfOpStack.operator, '(')) {
+        return new LineParser$ShuntingYardStacks(newOperatorStack, output);
+      }
+      var newOutput = this.applyOrPutOperatorOnTheStack_0(topOfOpStack, output);
+      return this.popAnythingUntilOpeningBracket_0(newOperatorStack, newOutput);
+    }
+  };
+  LineParser.prototype.shuntingYardOperatorRule_0 = function (operatorStack, output, incomingOperatorName) {
+    var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4;
+    if (operatorStack.isEmpty()) {
+      return new LineParser$ShuntingYardStacks(operatorStack, output);
+    }
+    var topOfOpStack = last(operatorStack);
+    if (contains('()', topOfOpStack.operator)) {
+      return new LineParser$ShuntingYardStacks(operatorStack, output);
+    }
+    var incomingOpPrecedence = (tmp$_0 = (tmp$ = this.operatorInfosForUnits_0.get_11rb$(incomingOperatorName)) != null ? tmp$.precedence : null) != null ? tmp$_0 : 0;
+    var topOfStackPrecedence = (tmp$_2 = (tmp$_1 = this.operatorInfosForUnits_0.get_11rb$(topOfOpStack.operator)) != null ? tmp$_1.precedence : null) != null ? tmp$_2 : 0;
+    var assoc = (tmp$_4 = (tmp$_3 = this.operatorInfosForUnits_0.get_11rb$(incomingOperatorName)) != null ? tmp$_3.associativity : null) != null ? tmp$_4 : 'left';
+    var incomingPrecLeftAssocAndEqual = Kotlin.equals(assoc, 'left') && incomingOpPrecedence === topOfStackPrecedence;
+    if (incomingOpPrecedence < topOfStackPrecedence || incomingPrecLeftAssocAndEqual) {
+      var last_0 = last(operatorStack);
+      return this.shuntingYardOperatorRule_0(dropLast(operatorStack, 1), this.applyOrPutOperatorOnTheStack_0(last_0, output), incomingOperatorName);
+    }
+     else {
+      return new LineParser$ShuntingYardStacks(operatorStack, output);
+    }
+  };
+  LineParser.prototype.applyOrPutOperatorOnTheStack_0 = function (operator, stack) {
+    var tmp$, tmp$_0, tmp$_1;
+    if (stack.size < 2) {
+      tmp$_1 = plus(stack, operator);
+    }
+     else {
+      var lastTwo = takeLast(stack, 2);
+      var lhs = lastTwo.get_za3lpa$(0);
+      var rhs = lastTwo.get_za3lpa$(1);
+      var newTokenFromApplying = (tmp$_0 = (tmp$ = this.operatorInfosForUnits_0.get_11rb$(operator.operator)) != null ? tmp$.func : null) != null ? tmp$_0(lhs, rhs) : null;
+      if (newTokenFromApplying != null) {
+        tmp$_1 = plus(dropLast(stack, 2), newTokenFromApplying);
+      }
+       else {
+        tmp$_1 = plus(stack, operator);
+      }
+    }
+    return tmp$_1;
+  };
+  function LineParser$OperatorInfo(precedence, associativity, func) {
+    this.precedence = precedence;
+    this.associativity = associativity;
+    this.func = func;
+  }
+  LineParser$OperatorInfo.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'OperatorInfo',
+    interfaces: []
+  };
+  LineParser$OperatorInfo.prototype.component1 = function () {
+    return this.precedence;
+  };
+  LineParser$OperatorInfo.prototype.component2 = function () {
+    return this.associativity;
+  };
+  LineParser$OperatorInfo.prototype.component3 = function () {
+    return this.func;
+  };
+  LineParser$OperatorInfo.prototype.copy_f81brm$ = function (precedence, associativity, func) {
+    return new LineParser$OperatorInfo(precedence === void 0 ? this.precedence : precedence, associativity === void 0 ? this.associativity : associativity, func === void 0 ? this.func : func);
+  };
+  LineParser$OperatorInfo.prototype.toString = function () {
+    return 'OperatorInfo(precedence=' + Kotlin.toString(this.precedence) + (', associativity=' + Kotlin.toString(this.associativity)) + (', func=' + Kotlin.toString(this.func)) + ')';
+  };
+  LineParser$OperatorInfo.prototype.hashCode = function () {
+    var result = 0;
+    result = result * 31 + Kotlin.hashCode(this.precedence) | 0;
+    result = result * 31 + Kotlin.hashCode(this.associativity) | 0;
+    result = result * 31 + Kotlin.hashCode(this.func) | 0;
+    return result;
+  };
+  LineParser$OperatorInfo.prototype.equals = function (other) {
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.precedence, other.precedence) && Kotlin.equals(this.associativity, other.associativity) && Kotlin.equals(this.func, other.func)))));
+  };
+  LineParser.prototype.getUnitnameAfterOperation_0 = function (lhsUnitname, rhsUnitname, func) {
+    var lhs = math.unit('1 ' + lhsUnitname);
+    var rhs = math.unit('1 ' + rhsUnitname);
+    var unitnameAfterOperation = drop_0(func(lhs, rhs).toString(), '1 '.length);
+    return unitnameAfterOperation;
+  };
+  LineParser.prototype.createHighlightingNamesForTokens_0 = function (tokens) {
+    var highlightInfosForTokens = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
+    var tmp$;
+    tmp$ = tokens.iterator();
+    while (tmp$.hasNext()) {
+      var element = tmp$.next();
+      if (Kotlin.isType(element, Token$NumberLiteral)) {
+        var strRepr = element.originalStringRepresentation.length === 0 ? element.num.toString() : element.originalStringRepresentation;
+        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(strRepr, 'number'));
+      }
+       else if (Kotlin.isType(element, Token$Variable))
+        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.variableName, 'variable'));
+      else if (Kotlin.isType(element, Token$StringLiteral))
+        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.str, 'comment'));
+      else if (Kotlin.isType(element, Token$Operator))
+        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.operator, 'operator'));
+      else if (Kotlin.isType(element, Token$UnitOfMeasure))
+        if (element.tokens.isEmpty()) {
+          highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.unitName, 'qualifier'));
+        }
+         else {
+          var tmp$_0;
+          tmp$_0 = element.tokens.iterator();
+          while (tmp$_0.hasNext()) {
+            var element_0 = tmp$_0.next();
+            highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(this.getStringRepresentation_0(element_0), 'qualifier'));
+          }
+        }
+       else
+        Kotlin.noWhenBranchMatched();
+    }
+    return highlightInfosForTokens;
+  };
+  LineParser.prototype.getStringRepresentation_0 = function (token) {
+    var tmp$;
+    if (Kotlin.isType(token, Token$UnitOfMeasure))
+      tmp$ = token.unitName;
+    else if (Kotlin.isType(token, Token$NumberLiteral)) {
+      tmp$ = token.originalStringRepresentation.length === 0 ? token.num.toString() : token.originalStringRepresentation;
+    }
+     else if (Kotlin.isType(token, Token$Operator))
+      tmp$ = token.operator;
+    else if (Kotlin.isType(token, Token$StringLiteral))
+      tmp$ = token.str;
+    else if (Kotlin.isType(token, Token$Variable))
+      tmp$ = token.variableName;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    var text_0 = tmp$;
+    return text_0;
+  };
+  function LineParser$EvaulationResult(parsedTokens, tokensWithMergedCompoundUnits, postFixNotationTokens, highlightedTexts, lastToken) {
+    this.parsedTokens = parsedTokens;
+    this.tokensWithMergedCompoundUnits = tokensWithMergedCompoundUnits;
+    this.postFixNotationTokens = postFixNotationTokens;
+    this.highlightedTexts = highlightedTexts;
+    this.lastToken = lastToken;
+  }
+  LineParser$EvaulationResult.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'EvaulationResult',
+    interfaces: []
+  };
+  LineParser$EvaulationResult.prototype.component1 = function () {
+    return this.parsedTokens;
+  };
+  LineParser$EvaulationResult.prototype.component2 = function () {
+    return this.tokensWithMergedCompoundUnits;
+  };
+  LineParser$EvaulationResult.prototype.component3 = function () {
+    return this.postFixNotationTokens;
+  };
+  LineParser$EvaulationResult.prototype.component4 = function () {
+    return this.highlightedTexts;
+  };
+  LineParser$EvaulationResult.prototype.component5 = function () {
+    return this.lastToken;
+  };
+  LineParser$EvaulationResult.prototype.copy_vy96hp$ = function (parsedTokens, tokensWithMergedCompoundUnits, postFixNotationTokens, highlightedTexts, lastToken) {
+    return new LineParser$EvaulationResult(parsedTokens === void 0 ? this.parsedTokens : parsedTokens, tokensWithMergedCompoundUnits === void 0 ? this.tokensWithMergedCompoundUnits : tokensWithMergedCompoundUnits, postFixNotationTokens === void 0 ? this.postFixNotationTokens : postFixNotationTokens, highlightedTexts === void 0 ? this.highlightedTexts : highlightedTexts, lastToken === void 0 ? this.lastToken : lastToken);
+  };
+  LineParser$EvaulationResult.prototype.toString = function () {
+    return 'EvaulationResult(parsedTokens=' + Kotlin.toString(this.parsedTokens) + (', tokensWithMergedCompoundUnits=' + Kotlin.toString(this.tokensWithMergedCompoundUnits)) + (', postFixNotationTokens=' + Kotlin.toString(this.postFixNotationTokens)) + (', highlightedTexts=' + Kotlin.toString(this.highlightedTexts)) + (', lastToken=' + Kotlin.toString(this.lastToken)) + ')';
+  };
+  LineParser$EvaulationResult.prototype.hashCode = function () {
+    var result = 0;
+    result = result * 31 + Kotlin.hashCode(this.parsedTokens) | 0;
+    result = result * 31 + Kotlin.hashCode(this.tokensWithMergedCompoundUnits) | 0;
+    result = result * 31 + Kotlin.hashCode(this.postFixNotationTokens) | 0;
+    result = result * 31 + Kotlin.hashCode(this.highlightedTexts) | 0;
+    result = result * 31 + Kotlin.hashCode(this.lastToken) | 0;
+    return result;
+  };
+  LineParser$EvaulationResult.prototype.equals = function (other) {
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.parsedTokens, other.parsedTokens) && Kotlin.equals(this.tokensWithMergedCompoundUnits, other.tokensWithMergedCompoundUnits) && Kotlin.equals(this.postFixNotationTokens, other.postFixNotationTokens) && Kotlin.equals(this.highlightedTexts, other.highlightedTexts) && Kotlin.equals(this.lastToken, other.lastToken)))));
+  };
+  function LineParser$operatorInfosForUnits$lambda(lhs, rhs) {
+    return null;
+  }
+  function LineParser$operatorInfosForUnits$lambda_0(lhs, rhs) {
+    if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$NumberLiteral)) {
+      var num_1 = rhs.num;
+      var poweredUnit = pow(math.unit('1 ' + lhs.unitName), num_1);
+      var poweredUnitname = drop_0(poweredUnit.toString(), '1 '.length);
+      return new Token$UnitOfMeasure(poweredUnitname);
+    }
+     else {
+      return null;
+    }
+  }
+  function LineParser$operatorInfosForUnits$lambda_1(lhs, rhs) {
+    return null;
+  }
+  function LineParser$operatorInfosForUnits$lambda_2(lhs, rhs) {
+    return null;
+  }
+  function LineParser$operatorInfosForUnits$lambda_3(lhs, rhs) {
+    return null;
+  }
+  function LineParser$operatorInfosForUnits$lambda_4(lhs, rhs) {
+    return null;
+  }
+  function LineParser$operatorInfosForUnits$lambda_5(this$LineParser) {
+    return function (lhs, rhs) {
+      if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$UnitOfMeasure)) {
+        var unitnameAfterOperation = this$LineParser.getUnitnameAfterOperation_0(lhs.unitName, rhs.unitName, Kotlin.getCallableRef('multiply', function ($receiver, other) {
+          return multiply($receiver, other);
+        }));
+        return new Token$UnitOfMeasure(unitnameAfterOperation);
+      }
+       else {
+        return null;
+      }
+    };
+  }
+  function LineParser$operatorInfosForUnits$lambda_6(this$LineParser) {
+    return function (lhs, rhs) {
+      if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$UnitOfMeasure)) {
+        var unitnameAfterOperation = this$LineParser.getUnitnameAfterOperation_0(lhs.unitName, rhs.unitName, Kotlin.getCallableRef('divide', function ($receiver, other) {
+          return divide($receiver, other);
+        }));
+        return new Token$UnitOfMeasure(unitnameAfterOperation);
+      }
+       else {
+        return null;
+      }
+    };
+  }
+  LineParser.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'LineParser',
+    interfaces: []
+  };
   var nextNoteCalcIndex;
   var globalVariables;
   var NOTE_CALC_IDS_KEY;
@@ -259,8 +623,8 @@ var NoteCalcJS = function (_, Kotlin) {
   }
   var addButtonClicked;
   function loadTitleOr(noteCalcIndex, default_0) {
-    var str = getNoteCalcTitle(localStorage, noteCalcIndex);
-    return str == null || str.length === 0 ? default_0 : str != null ? str : Kotlin.throwNPE();
+    var str_0 = getNoteCalcTitle(localStorage, noteCalcIndex);
+    return str_0 == null || str_0.length === 0 ? default_0 : str_0 != null ? str_0 : Kotlin.throwNPE();
   }
   function addNewEditorRow$lambda$lambda(closure$editorIndex, closure$panelTitle) {
     return function () {
@@ -381,6 +745,8 @@ var NoteCalcJS = function (_, Kotlin) {
   function NoteCalcEditor(defaultValue, editorTextArea, resultTextArea, globalVariables_0, onChange) {
     NoteCalcEditor$Companion_getInstance();
     this.globalVariables = globalVariables_0;
+    this.lineParser_0 = new LineParser();
+    this.tokenListEvaulator_0 = new TokenListEvaulator();
     this.highlightedTexts_0 = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
     this.variables_0 = Kotlin.kotlin.collections.HashMap_init_q3lmfv$();
     CodeMirrorWrapper_getInstance().defineTokenizer_uic2nj$(NoteCalcEditor$Companion_getInstance().tokenizer_0);
@@ -399,7 +765,7 @@ var NoteCalcJS = function (_, Kotlin) {
       return plus_0(this.variables_0, this.globalVariables);
     }
   });
-  NoteCalcEditor.prototype.textAreaChanged_0 = function (str) {
+  NoteCalcEditor.prototype.textAreaChanged_0 = function (str_0) {
     this.highlightedTexts_0.clear();
     this.variables_0.clear();
     var resultString = new StringBuilder();
@@ -410,11 +776,11 @@ var NoteCalcJS = function (_, Kotlin) {
     var methodScopeVariableNames = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
     var tmp$, tmp$_0;
     var index = 0;
-    tmp$ = lines(str).iterator();
+    tmp$ = lines(str_0).iterator();
     while (tmp$.hasNext()) {
       var item = tmp$.next();
       var nullBasedLineIndex = (tmp$_0 = index, index = tmp$_0 + 1 | 0, tmp$_0);
-      var tmp$_1, tmp$_2, tmp$_3, tmp$_4, tmp$_5;
+      var tmp$_1, tmp$_2, tmp$_3, tmp$_4, tmp$_5, tmp$_6, tmp$_7, tmp$_8, tmp$_9;
       this.createVariablesForPreviousLineResults_0(resultsByLineNumber.v, this.variables_0);
       var functionDefInCurrentLine = this.tryParseFunctionDef_0(item);
       if (this.functionDefinitionStart_0(currentFunctionDefinition.v, functionDefInCurrentLine)) {
@@ -427,17 +793,16 @@ var NoteCalcJS = function (_, Kotlin) {
       }
        else if (this.stillInTheFunctionBody_0(currentFunctionDefinition.v, item)) {
         var oldCurrentFunctionDefinition = (tmp$_5 = currentFunctionDefinition.v) != null ? tmp$_5 : Kotlin.throwNPE();
-        var tmp$_6;
-        var trimmedLine = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_6 = item) ? tmp$_6 : Kotlin.throwCCE()).toString();
-        var evaluationResult = this.parseProcessAndEvaulate_0(functionDefsByName.keys, trimmedLine, plus_1(this.allVariables.keys, methodScopeVariableNames));
+        var tmp$_10;
+        var trimmedLine = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_10 = item) ? tmp$_10 : Kotlin.throwCCE()).toString();
+        var evaluationResult = this.lineParser_0.parseProcessAndEvaulate_0(functionDefsByName.keys, trimmedLine, plus_1(this.allVariables.keys, methodScopeVariableNames));
         if (evaluationResult != null) {
-          var tmp$_7, tmp$_8, tmp$_9, tmp$_10;
           resultString.append_gw00v9$(this.createDebugString_0(evaluationResult.parsedTokens, evaluationResult.tokensWithMergedCompoundUnits, evaluationResult.postFixNotationTokens));
           var lineAndTokens = new NoteCalcEditor$Companion$LineAndTokens(trimmedLine, evaluationResult.postFixNotationTokens);
           currentFunctionDefinition.v = oldCurrentFunctionDefinition.copy_3elgw5$(void 0, void 0, plus(oldCurrentFunctionDefinition.tokenLines, lineAndTokens));
-          tmp$_9 = ((tmp$_8 = currentFunctionDefinition.v) != null ? tmp$_8 : Kotlin.throwNPE()).name;
-          tmp$_10 = (tmp$_7 = currentFunctionDefinition.v) != null ? tmp$_7 : Kotlin.throwNPE();
-          functionDefsByName.put_xwzc9p$(tmp$_9, tmp$_10);
+          tmp$_8 = ((tmp$_7 = currentFunctionDefinition.v) != null ? tmp$_7 : Kotlin.throwNPE()).name;
+          tmp$_9 = (tmp$_6 = currentFunctionDefinition.v) != null ? tmp$_6 : Kotlin.throwNPE();
+          functionDefsByName.put_xwzc9p$(tmp$_8, tmp$_9);
           this.highlightedTexts_0.addAll_brywnq$(evaluationResult.highlightedTexts);
           var currentVariableName = this.tryParseVariableName_0(evaluationResult.lastToken, trimmedLine);
           if (currentVariableName != null) {
@@ -451,11 +816,15 @@ var NoteCalcJS = function (_, Kotlin) {
           currentFunctionDefinition.v = null;
           methodScopeVariableNames.clear();
         }
-        var evaluationResult_0 = this.parseProcessAndEvaulate_0(functionDefsByName.keys, item, this.allVariables.keys);
-        if (evaluationResult_0 != null) {
+        var evaluationResult_0 = this.lineParser_0.parseProcessAndEvaulate_0(functionDefsByName.keys, item, this.allVariables.keys);
+        if (evaluationResult_0 == null) {
+          resultString.append_s8itvh$(10);
+          this.highlightedTexts_0.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(item, 'error'));
+        }
+         else {
           resultString.append_gw00v9$(this.createDebugString_0(evaluationResult_0.parsedTokens, evaluationResult_0.tokensWithMergedCompoundUnits, evaluationResult_0.postFixNotationTokens));
           var currentVariableName_0 = this.tryParseVariableName_0(evaluationResult_0.lastToken, item);
-          var resultOperand = NoteCalcEditor$Companion_getInstance().processPostfixNotationStack_h27eq8$(evaluationResult_0.postFixNotationTokens, this.variables_0, functionDefsByName);
+          var resultOperand = this.tokenListEvaulator_0.processPostfixNotationStack_h27eq8$(evaluationResult_0.postFixNotationTokens, this.variables_0, functionDefsByName);
           this.saveResultIntoVariable_0(currentVariableName_0, resultOperand, this.variables_0, this.globalVariables);
           if (resultOperand != null) {
             sum.v += resultOperand.toRawNumber();
@@ -470,10 +839,6 @@ var NoteCalcJS = function (_, Kotlin) {
             }
           }
           this.highlightedTexts_0.addAll_brywnq$(evaluationResult_0.highlightedTexts);
-        }
-        if (evaluationResult_0 == null) {
-          resultString.append_s8itvh$(10);
-          this.highlightedTexts_0.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(item, 'error'));
         }
         var $receiver = this.variables_0;
         var value = new Operand$Number(sum.v, NumberType$Float_getInstance());
@@ -527,70 +892,6 @@ var NoteCalcJS = function (_, Kotlin) {
     }
      else
       tmp$ = '';
-    return tmp$;
-  };
-  function NoteCalcEditor$EvaulationResult(parsedTokens, tokensWithMergedCompoundUnits, postFixNotationTokens, highlightedTexts, lastToken) {
-    this.parsedTokens = parsedTokens;
-    this.tokensWithMergedCompoundUnits = tokensWithMergedCompoundUnits;
-    this.postFixNotationTokens = postFixNotationTokens;
-    this.highlightedTexts = highlightedTexts;
-    this.lastToken = lastToken;
-  }
-  NoteCalcEditor$EvaulationResult.$metadata$ = {
-    kind: Kotlin.Kind.CLASS,
-    simpleName: 'EvaulationResult',
-    interfaces: []
-  };
-  NoteCalcEditor$EvaulationResult.prototype.component1 = function () {
-    return this.parsedTokens;
-  };
-  NoteCalcEditor$EvaulationResult.prototype.component2 = function () {
-    return this.tokensWithMergedCompoundUnits;
-  };
-  NoteCalcEditor$EvaulationResult.prototype.component3 = function () {
-    return this.postFixNotationTokens;
-  };
-  NoteCalcEditor$EvaulationResult.prototype.component4 = function () {
-    return this.highlightedTexts;
-  };
-  NoteCalcEditor$EvaulationResult.prototype.component5 = function () {
-    return this.lastToken;
-  };
-  NoteCalcEditor$EvaulationResult.prototype.copy_vy96hp$ = function (parsedTokens, tokensWithMergedCompoundUnits, postFixNotationTokens, highlightedTexts, lastToken) {
-    return new NoteCalcEditor$EvaulationResult(parsedTokens === void 0 ? this.parsedTokens : parsedTokens, tokensWithMergedCompoundUnits === void 0 ? this.tokensWithMergedCompoundUnits : tokensWithMergedCompoundUnits, postFixNotationTokens === void 0 ? this.postFixNotationTokens : postFixNotationTokens, highlightedTexts === void 0 ? this.highlightedTexts : highlightedTexts, lastToken === void 0 ? this.lastToken : lastToken);
-  };
-  NoteCalcEditor$EvaulationResult.prototype.toString = function () {
-    return 'EvaulationResult(parsedTokens=' + Kotlin.toString(this.parsedTokens) + (', tokensWithMergedCompoundUnits=' + Kotlin.toString(this.tokensWithMergedCompoundUnits)) + (', postFixNotationTokens=' + Kotlin.toString(this.postFixNotationTokens)) + (', highlightedTexts=' + Kotlin.toString(this.highlightedTexts)) + (', lastToken=' + Kotlin.toString(this.lastToken)) + ')';
-  };
-  NoteCalcEditor$EvaulationResult.prototype.hashCode = function () {
-    var result = 0;
-    result = result * 31 + Kotlin.hashCode(this.parsedTokens) | 0;
-    result = result * 31 + Kotlin.hashCode(this.tokensWithMergedCompoundUnits) | 0;
-    result = result * 31 + Kotlin.hashCode(this.postFixNotationTokens) | 0;
-    result = result * 31 + Kotlin.hashCode(this.highlightedTexts) | 0;
-    result = result * 31 + Kotlin.hashCode(this.lastToken) | 0;
-    return result;
-  };
-  NoteCalcEditor$EvaulationResult.prototype.equals = function (other) {
-    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.parsedTokens, other.parsedTokens) && Kotlin.equals(this.tokensWithMergedCompoundUnits, other.tokensWithMergedCompoundUnits) && Kotlin.equals(this.postFixNotationTokens, other.postFixNotationTokens) && Kotlin.equals(this.highlightedTexts, other.highlightedTexts) && Kotlin.equals(this.lastToken, other.lastToken)))));
-  };
-  NoteCalcEditor.prototype.parseProcessAndEvaulate_0 = function (functionNames, line, variableNames) {
-    var tmp$;
-    try {
-      var parsedTokens = NoteCalcEditor$Companion_getInstance().parse_0(line, variableNames, functionNames);
-      var tokensWithMergedCompoundUnits = NoteCalcEditor$Companion_getInstance().mergeCompoundUnitsAndUnaryMinusOperators_0(parsedTokens);
-      var postFixNotationTokens = NoteCalcEditor$Companion_getInstance().shuntingYard_0(tokensWithMergedCompoundUnits, functionNames);
-      var highlightingInfos = NoteCalcEditor$Companion_getInstance().createHighlightingNamesForTokens_0(parsedTokens);
-      var lastToken = lastOrNull(postFixNotationTokens);
-      tmp$ = new NoteCalcEditor$EvaulationResult(parsedTokens, tokensWithMergedCompoundUnits, postFixNotationTokens, highlightingInfos, lastToken);
-    }
-     catch (e) {
-      if (Kotlin.isType(e, Throwable)) {
-        tmp$ = null;
-      }
-       else
-        throw e;
-    }
     return tmp$;
   };
   NoteCalcEditor.prototype.functionDefinitionStart_0 = function (currentFunctionDefinition, functionDefInCurrentLine) {
@@ -815,759 +1116,8 @@ var NoteCalcJS = function (_, Kotlin) {
   function NoteCalcEditor$Companion() {
     NoteCalcEditor$Companion_instance = this;
     this.tokenizer_0 = NoteCalcEditor$Companion$tokenizer$lambda;
-    this.operatorInfosForUnits_0 = hashMapOf_0([to('%', new NoteCalcEditor$Companion$OperatorInfo(6, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda)), to('^', new NoteCalcEditor$Companion$OperatorInfo(5, 'right', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_0)), to('unit', new NoteCalcEditor$Companion$OperatorInfo(4, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_1)), to('=', new NoteCalcEditor$Companion$OperatorInfo(0, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_2)), to('+', new NoteCalcEditor$Companion$OperatorInfo(2, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_3)), to('-', new NoteCalcEditor$Companion$OperatorInfo(2, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_4)), to('*', new NoteCalcEditor$Companion$OperatorInfo(3, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_5(this))), to('/', new NoteCalcEditor$Companion$OperatorInfo(3, 'left', NoteCalcEditor$Companion$operatorInfosForUnits$lambda_6(this)))]);
-    var num = NoteCalcEditor$NoteCalcEditor$Companion_init$num;
-    var num_0 = NoteCalcEditor$NoteCalcEditor$Companion_init$num_0;
-    var op = NoteCalcEditor$NoteCalcEditor$Companion_init$op;
-    var str = NoteCalcEditor$NoteCalcEditor$Companion_init$str;
-    var unit = NoteCalcEditor$NoteCalcEditor$Companion_init$unit;
-    this.assertTokenListEq_0(this.parse_0('1+2.0'), [num(1), op('+'), num_0(2.0)]);
-    this.assertTokenListEq_0(this.parse_0('200kg alma + 300 kg ban\xE1n'), [num(200), unit('kg'), str('alma'), op('+'), num(300), unit('kg'), str('ban\xE1n')]);
-    this.assertTokenListEq_0(this.parse_0('(1 alma + 4 k\xF6rte) * 3 ember'), [op('('), num(1), str('alma'), op('+'), num(4), str('k\xF6rte'), op(')'), op('*'), num(3), str('ember')]);
-    this.assertTokenListEq_0(this.parse_0('1/2s'), [num(1), op('/'), num(2), unit('s')]);
-    this.assertTokenListEq_0(this.shuntingYard_0(this.mergeCompoundUnitsAndUnaryMinusOperators_0(this.parse_0('1/2s')), emptyList()), [num(1), num(2), unit('s'), op('/')]);
-    this.assertTokenListEq_0(this.parse_0('0b00101 & 0xFF ^ 0xFF00 << 16 >> 16 ! 0xFF'), [num(5), op('&'), num(255), op('^'), num(65280), op('<<'), num(16), op('>>'), num(16), op('!'), num(255)]);
-    this.assertTokenListEq_0(this.parse_0('10km/h * 45min in m'), [num(10), unit('km'), op('/'), unit('h'), op('*'), num(45), unit('min'), op('in'), unit('m')]);
-    this.assertTokenListEq_0(this.parse_0('10(km/h)^2 * 45min in m'), [num(10), op('('), unit('km'), op('/'), unit('h'), op(')'), op('^'), num(2), op('*'), num(45), unit('min'), op('in'), unit('m')]);
-    this.assertTokenListEq_0(this.mergeCompoundUnitsAndUnaryMinusOperators_0(this.parse_0('12km/h')), [num(12), unit('km/h')]);
-    this.assertTokenListEq_0(this.mergeCompoundUnitsAndUnaryMinusOperators_0(this.parse_0('12km/h*3')), [num(12), unit('km/h'), op('*'), num(3)]);
-    this.assertTokenListEq_0(this.parse_0('-3'), [op('-'), num(3)]);
-    this.assertTokenListEq_0(this.parse_0('-0xFF'), [op('-'), num(255)]);
-    this.assertTokenListEq_0(this.parse_0('-0b110011'), [op('-'), num(51)]);
-    this.assertTokenListEq_0(this.mergeCompoundUnitsAndUnaryMinusOperators_0(this.parse_0('-3')), [op('-'), num(3)]);
-    this.assertTokenListEq_0(this.parse_0('-0xFF'), [op('-'), num(255)]);
-    this.assertTokenListEq_0(this.parse_0('-0b110011'), [op('-'), num(51)]);
-    this.assertEq_puj7f4$('30 km', '(10+20)km');
-    this.assertEq_puj7f4$('7500 m', '10(km/h) * 45min in m');
-    this.assertEq_puj7f4$('500 kg', '200kg alma + 300 kg ban\xE1n');
-    this.assertEq_7dzp7p$(new Operand$Number(15), '(1 alma + 4 k\xF6rte) * 3 ember');
-    this.assertEq_7dzp7p$(new Operand$Percentage(5), '10 as a % of 200');
-    this.assertEq_7dzp7p$(new Operand$Percentage(30), '10% + 20%');
-    this.assertEq_7dzp7p$(new Operand$Number(220), '200 + 10%');
-    this.assertEq_7dzp7p$(new Operand$Number(180), '200 - 10%');
-    this.assertEq_7dzp7p$(new Operand$Number(20), '200 * 10%');
-    this.assertEq_7dzp7p$(new Operand$Number(181.82, NumberType$Float_getInstance()), '10% on what is $200');
-    this.assertEq_7dzp7p$(new Operand$Number(2000), '10% of what is $200');
-    this.assertEq_7dzp7p$(new Operand$Number(222.22, NumberType$Float_getInstance()), '10% off what is $200');
-    this.assertTokenListEq_0(this.parse_0('I traveled with 45km/h for / 13km in min'), [str('I'), str('traveled'), str('with'), num(45), unit('km'), op('/'), unit('h'), str('for'), op('/'), num(13), unit('km'), op('in'), unit('min')]);
-    this.assertEq_puj7f4$('19.5 min', 'I traveled 13km / at a rate 40km/h in min');
-    this.assertEq_puj7f4$('12 mile/h', 'I traveled 24 miles and rode my bike  / 2 hours');
-    this.assertEq_puj7f4$('40 mile', "Now let's say you rode your bike at a rate of 10 miles/h for * 4 h");
-    this.assertEq_7dzp7p$(new Operand$Number(9), '12-3');
-    this.assertEq_7dzp7p$(new Operand$Number(1027), '2^10 + 3');
-    this.assertEq_7dzp7p$(new Operand$Number(163), '1+2*3^4');
-    this.assertEq_puj7f4$('0.5s', '1/2s');
-    this.assertEq_puj7f4$('0.5s', '1/(2s)');
-    this.assertEq_7dzp7p$(new Operand$Number(60), '15 EUR ad\xF3mentes azaz 75-15 eur\xF3b\xF3l kell ad\xF3zni');
-    this.assertEq_puj7f4$('0.529 GB / seconds', 'transfer of around 1.587GB in about / 3 seconds');
-    this.assertEq_puj7f4$('37.5 MB', 'A is a unit but should not be handled here so... 37.5MB of DNA information in it.');
-    this.assertEq_7dzp7p$(new Operand$Number(1000), '3k - 2k');
-    this.assertEq_7dzp7p$(new Operand$Number(1000000), '3M - 2M');
-    this.assertEq_7dzp7p$(new Operand$Number(100), '1GB / 10MB');
+    (new NoteCalcEditorTest()).runTests();
   }
-  function NoteCalcEditor$Companion$assertEq$lambda(closure$actualInput, this$NoteCalcEditor$, closure$expectedValue) {
-    return function (assert) {
-      var tmp$, tmp$_0;
-      var actual = Kotlin.isType(tmp$_0 = (tmp$ = this$NoteCalcEditor$.processPostfixNotationStack_h27eq8$(this$NoteCalcEditor$.shuntingYard_0(this$NoteCalcEditor$.mergeCompoundUnitsAndUnaryMinusOperators_0(this$NoteCalcEditor$.parse_0(closure$actualInput)), emptyList()), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE(), Operand$Quantity) ? tmp$_0 : Kotlin.throwCCE();
-      assert.ok(math.unit(closure$expectedValue).equals(actual.quantity), closure$expectedValue + ' != ' + actual);
-    };
-  }
-  NoteCalcEditor$Companion.prototype.assertEq_puj7f4$ = function (expectedValue, actualInput) {
-    QUnit.test(actualInput, NoteCalcEditor$Companion$assertEq$lambda(actualInput, this, expectedValue));
-  };
-  function NoteCalcEditor$Companion$assertEq$lambda_0(a, b) {
-    return Math.round(Kotlin.numberToDouble(a) * 100) === Math.round(Kotlin.numberToDouble(b) * 100);
-  }
-  function NoteCalcEditor$Companion$assertEq$lambda_1(closure$actualInput, this$NoteCalcEditor$, closure$expectedValue, closure$floatEq) {
-    return function (assert) {
-      var tmp$, tmp$_0, tmp$_1;
-      var actual = (tmp$ = this$NoteCalcEditor$.processPostfixNotationStack_h27eq8$(this$NoteCalcEditor$.shuntingYard_0(this$NoteCalcEditor$.mergeCompoundUnitsAndUnaryMinusOperators_0(this$NoteCalcEditor$.parse_0(closure$actualInput)), emptyList()), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE();
-      tmp$_0 = closure$expectedValue;
-      if (Kotlin.isType(tmp$_0, Operand$Number))
-        tmp$_1 = (Kotlin.isType(actual, Operand$Number) && closure$floatEq(actual.num, closure$expectedValue.num));
-      else if (Kotlin.isType(tmp$_0, Operand$Quantity))
-        tmp$_1 = (Kotlin.isType(actual, Operand$Quantity) && actual.quantity.equals(closure$expectedValue.quantity));
-      else if (Kotlin.isType(tmp$_0, Operand$Percentage))
-        tmp$_1 = (Kotlin.isType(actual, Operand$Percentage) && closure$floatEq(actual.num, closure$expectedValue.num));
-      else
-        tmp$_1 = Kotlin.noWhenBranchMatched();
-      var ok = tmp$_1;
-      assert.ok(ok, closure$expectedValue.asString() + ' != ' + actual.asString());
-    };
-  }
-  NoteCalcEditor$Companion.prototype.assertEq_7dzp7p$ = function (expectedValue, actualInput) {
-    var floatEq = NoteCalcEditor$Companion$assertEq$lambda_0;
-    QUnit.test(actualInput, NoteCalcEditor$Companion$assertEq$lambda_1(actualInput, this, expectedValue, floatEq));
-  };
-  NoteCalcEditor$Companion.prototype.processPostfixNotationStackRec_oxe9kf$ = function (quantitativeStack, tokens, lastUnit, variables, functions) {
-    var tmp$, tmp$_0, tmp$_1;
-    if (tokens.isEmpty()) {
-      return quantitativeStack;
-    }
-    var lastUnit_0 = lastUnit;
-    var incomingToken = first(tokens);
-    if (Kotlin.isType(incomingToken, Token$NumberLiteral))
-      tmp$_1 = plus(quantitativeStack, new Operand$Number(incomingToken.num, incomingToken.type));
-    else if (Kotlin.isType(incomingToken, Token$Variable)) {
-      var variable = variables.get_11rb$(incomingToken.variableName);
-      if (variable != null) {
-        tmp$_1 = plus(quantitativeStack, variable);
-      }
-       else
-        tmp$_1 = quantitativeStack;
-    }
-     else if (Kotlin.isType(incomingToken, Token$UnitOfMeasure)) {
-      var topOfStack = lastOrNull(quantitativeStack);
-      if (topOfStack != null && Kotlin.isType(topOfStack, Operand$Number)) {
-        tmp$_1 = plus(dropLast(quantitativeStack, 1), this.addUnitToTheTopOfStackEntry_0(topOfStack, incomingToken));
-      }
-       else {
-        lastUnit_0 = incomingToken.unitName;
-        tmp$_1 = quantitativeStack;
-      }
-    }
-     else if (Kotlin.isType(incomingToken, Token$Operator))
-      if (startsWith_0(incomingToken.operator, 'fun ')) {
-        var funcName = drop(incomingToken.operator, 'fun '.length);
-        var functionDef = functions.get_11rb$(funcName);
-        if (functionDef != null && quantitativeStack.size >= functionDef.argumentNames.size) {
-          var arguments_0 = takeLast(quantitativeStack, functionDef.argumentNames.size);
-          var methodScope = HashMap_init(plus_0(variables, toMap(zip(functionDef.argumentNames, arguments_0))));
-          var $receiver = functionDef.tokenLines;
-          var destination = Kotlin.kotlin.collections.ArrayList_init_ww73n8$(Kotlin.kotlin.collections.collectionSizeOrDefault_ba2ldo$($receiver, 10));
-          var tmp$_2;
-          tmp$_2 = $receiver.iterator();
-          while (tmp$_2.hasNext()) {
-            var item = tmp$_2.next();
-            var tmp$_3 = destination.add_11rb$;
-            var tmp$_4;
-            var lastToken = lastOrNull(item.postfixNotationStack);
-            var resultOperand_1 = this.processPostfixNotationStack_h27eq8$(item.postfixNotationStack, methodScope, functions);
-            if (resultOperand_1 != null && Kotlin.isType(lastToken, Token$Operator) && Kotlin.equals(lastToken.operator, '=')) {
-              var $receiver_0 = item.line;
-              var takeWhile$result;
-              takeWhile$break: {
-                var tmp$_5;
-                tmp$_5 = $receiver_0.length - 1 | 0;
-                for (var index = 0; index <= tmp$_5; index++) {
-                  if (!(Kotlin.unboxChar(Kotlin.toBoxedChar($receiver_0.charCodeAt(index))) !== 61)) {
-                    takeWhile$result = $receiver_0.substring(0, index);
-                    break takeWhile$break;
-                  }
-                }
-                takeWhile$result = $receiver_0;
-              }
-              var $receiver_1 = takeWhile$result;
-              var tmp$_6;
-              tmp$_4 = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_6 = $receiver_1) ? tmp$_6 : Kotlin.throwCCE()).toString();
-            }
-             else
-              tmp$_4 = null;
-            var currentVariableName = tmp$_4;
-            if (currentVariableName != null && resultOperand_1 != null) {
-              methodScope.put_xwzc9p$(currentVariableName, resultOperand_1);
-            }
-            tmp$_3.call(destination, resultOperand_1);
-          }
-          var resultOperand = lastOrNull(destination);
-          if (resultOperand != null) {
-            tmp$_1 = plus(dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0), resultOperand);
-          }
-           else {
-            tmp$_1 = dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0);
-          }
-        }
-         else {
-          tmp$_1 = dropLast(quantitativeStack, 1);
-        }
-      }
-       else {
-        if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, '%')) {
-          var topOfStack_0 = last(quantitativeStack);
-          if (Kotlin.isType(topOfStack_0, Operand$Number)) {
-            var num = topOfStack_0.num;
-            tmp$_1 = plus(dropLast(quantitativeStack, 1), new Operand$Percentage(num, topOfStack_0.type));
-          }
-           else {
-            tmp$_1 = dropLast(quantitativeStack, 1);
-          }
-        }
-         else if (quantitativeStack.size >= 2) {
-          var lastTwo = takeLast(quantitativeStack, 2);
-          var lhs = lastTwo.get_za3lpa$(0);
-          var rhs = lastTwo.get_za3lpa$(1);
-          try {
-            tmp$ = this.applyOperation_0(incomingToken.operator, lhs, rhs);
-          }
-           catch (e) {
-            if (Kotlin.isType(e, Throwable)) {
-              console.error(e);
-              tmp$ = null;
-            }
-             else
-              throw e;
-          }
-          var resultOperand_0 = tmp$;
-          if (resultOperand_0 != null) {
-            tmp$_1 = plus(dropLast(quantitativeStack, 2), resultOperand_0);
-          }
-           else {
-            tmp$_1 = quantitativeStack;
-          }
-        }
-         else {
-          if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, 'in')) {
-            var theQuantityThatWillBeConverted = lastOrNull(quantitativeStack);
-            if (lastUnit_0 != null && Kotlin.isType(theQuantityThatWillBeConverted, Operand$Quantity)) {
-              try {
-                tmp$_0 = theQuantityThatWillBeConverted.quantity.to(lastUnit_0);
-              }
-               catch (e) {
-                if (Kotlin.isType(e, Throwable)) {
-                  tmp$_0 = null;
-                }
-                 else
-                  throw e;
-              }
-              var convertedQuantity = tmp$_0;
-              if (convertedQuantity != null) {
-                tmp$_1 = plus(dropLast(quantitativeStack, 1), new Operand$Quantity(convertedQuantity, theQuantityThatWillBeConverted.type));
-              }
-               else {
-                tmp$_1 = quantitativeStack;
-              }
-            }
-             else {
-              tmp$_1 = quantitativeStack;
-            }
-          }
-           else {
-            tmp$_1 = quantitativeStack;
-          }
-        }
-      }
-     else if (Kotlin.isType(incomingToken, Token$StringLiteral))
-      tmp$_1 = quantitativeStack;
-    else
-      tmp$_1 = Kotlin.noWhenBranchMatched();
-    var modifiedQuantitativeStack = tmp$_1;
-    return this.processPostfixNotationStackRec_oxe9kf$(modifiedQuantitativeStack, drop_0(tokens, 1), lastUnit_0, variables, functions);
-  };
-  NoteCalcEditor$Companion.prototype.processPostfixNotationStack_h27eq8$ = function (tokens, variables, functions) {
-    var quantitativeStack = this.processPostfixNotationStackRec_oxe9kf$.call(this, Kotlin.kotlin.collections.emptyList_287e2$(), tokens, null, variables, functions);
-    return lastOrNull(quantitativeStack);
-  };
-  NoteCalcEditor$Companion.prototype.applyOperation_0 = function (operator, lhs, rhs) {
-    var tmp$;
-    try {
-      if (Kotlin.equals(operator, 'as a % of'))
-        tmp$ = this.asAPercentOfOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, 'on what is'))
-        tmp$ = this.onWhatIsOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, 'of what is'))
-        tmp$ = this.ofWhatIsOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, 'off what is'))
-        tmp$ = this.offWhatIsOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, '*'))
-        tmp$ = this.multiplyOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, '/'))
-        tmp$ = this.divideOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, '+'))
-        tmp$ = this.plusOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, '-'))
-        tmp$ = this.minusOperator_0(lhs, rhs);
-      else if (Kotlin.equals(operator, '^'))
-        tmp$ = this.powerOperator_0(lhs, rhs);
-      else
-        tmp$ = null;
-    }
-     catch (e) {
-      if (Kotlin.isType(e, Throwable)) {
-        console.error(lhs.asString() + operator + rhs.asString());
-        console.error(e);
-        tmp$ = null;
-      }
-       else
-        throw e;
-    }
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.powerOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = new Operand$Number(Math.pow(Kotlin.numberToDouble(lhs.num), Kotlin.numberToDouble(rhs.num)), lhs.type);
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Quantity)) {
-      if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = new Operand$Quantity(pow(lhs.quantity, Kotlin.numberToDouble(rhs.num)), lhs.type);
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.minusOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = this.subtractNumbers_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage)) {
-        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
-        tmp$ = new Operand$Number(Kotlin.numberToDouble(lhs.num) - xPercentOfLeftHandSide, lhs.type);
-      }
-       else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Quantity)) {
-      if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = this.subtractQuantities_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.plusOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = this.addNumbers_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage)) {
-        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
-        tmp$ = new Operand$Number(Kotlin.numberToDouble(lhs.num) + xPercentOfLeftHandSide, lhs.type);
-      }
-       else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Quantity)) {
-      if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = this.addQuantities_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Percentage)) {
-      if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = new Operand$Percentage(Kotlin.numberToDouble(lhs.num) + Kotlin.numberToDouble(rhs.num), lhs.type);
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.divideOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = this.divideNumbers_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = new Operand$Quantity(math.eval(lhs.num + ' / ' + rhs.quantity), NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Percentage)) {
-        var x = Kotlin.numberToDouble(lhs.num) / Kotlin.numberToDouble(rhs.num) * 100;
-        tmp$ = new Operand$Number(x, lhs.type);
-      }
-       else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Quantity)) {
-      if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = this.divideQuantities_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.multiplyOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = this.multiplyNumbers_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = new Operand$Quantity(math.eval(lhs.num + ' * ' + rhs.quantity), NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Percentage)) {
-        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
-        tmp$ = new Operand$Number(xPercentOfLeftHandSide, lhs.type);
-      }
-       else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Quantity)) {
-      if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = this.multiplyQuantities_0(lhs, rhs);
-      else if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.asAPercentOfOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = new Operand$Percentage(Kotlin.numberToDouble(lhs.num) / Kotlin.numberToDouble(rhs.num) * 100, NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Quantity)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = new Operand$Percentage(lhs.toRawNumber() / rhs.toRawNumber() * 100, NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.onWhatIsOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number))
-      tmp$ = null;
-    else if (Kotlin.isType(lhs, Operand$Quantity))
-      tmp$ = null;
-    else if (Kotlin.isType(lhs, Operand$Percentage)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = new Operand$Number(Kotlin.numberToDouble(rhs.num) / (1 + Kotlin.numberToDouble(lhs.num) / 100), NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.ofWhatIsOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number))
-      tmp$ = null;
-    else if (Kotlin.isType(lhs, Operand$Quantity))
-      tmp$ = null;
-    else if (Kotlin.isType(lhs, Operand$Percentage)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = new Operand$Number(Kotlin.numberToDouble(rhs.num) / (Kotlin.numberToDouble(lhs.num) / 100), NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.offWhatIsOperator_0 = function (lhs, rhs) {
-    var tmp$;
-    if (Kotlin.isType(lhs, Operand$Number))
-      tmp$ = null;
-    else if (Kotlin.isType(lhs, Operand$Quantity))
-      tmp$ = null;
-    else if (Kotlin.isType(lhs, Operand$Percentage)) {
-      if (Kotlin.isType(rhs, Operand$Number))
-        tmp$ = new Operand$Number(Kotlin.numberToDouble(rhs.num) / (1 - Kotlin.numberToDouble(lhs.num) / 100), NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Quantity))
-        tmp$ = null;
-      else if (Kotlin.isType(rhs, Operand$Percentage))
-        tmp$ = null;
-      else
-        tmp$ = Kotlin.noWhenBranchMatched();
-    }
-     else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    return tmp$;
-  };
-  NoteCalcEditor$Companion.prototype.multiplyQuantities_0 = function (lhs, rhs) {
-    var tmp$, tmp$_0;
-    var result = multiply(lhs.quantity, rhs.quantity);
-    if (Kotlin.equals(typeof result, 'number')) {
-      tmp$_0 = new Operand$Number(Kotlin.isNumber(tmp$ = result) ? tmp$ : Kotlin.throwCCE(), lhs.type);
-    }
-     else {
-      tmp$_0 = new Operand$Quantity(result, lhs.type);
-    }
-    return tmp$_0;
-  };
-  NoteCalcEditor$Companion.prototype.multiplyNumbers_0 = function (lhs, rhs) {
-    return new Operand$Number(Kotlin.numberToDouble(lhs.num) * Kotlin.numberToDouble(rhs.num), lhs.type);
-  };
-  NoteCalcEditor$Companion.prototype.addNumbers_0 = function (lhs, rhs) {
-    return new Operand$Number(Kotlin.numberToDouble(lhs.num) + Kotlin.numberToDouble(rhs.num), lhs.type);
-  };
-  NoteCalcEditor$Companion.prototype.subtractNumbers_0 = function (lhs, rhs) {
-    return new Operand$Number(Kotlin.numberToDouble(lhs.num) - Kotlin.numberToDouble(rhs.num), lhs.type);
-  };
-  NoteCalcEditor$Companion.prototype.divideQuantities_0 = function (lhs, rhs) {
-    var tmp$, tmp$_0;
-    var result = divide(lhs.quantity, rhs.quantity);
-    if (Kotlin.equals(typeof result, 'number')) {
-      tmp$_0 = new Operand$Number(Kotlin.isNumber(tmp$ = result) ? tmp$ : Kotlin.throwCCE(), lhs.type);
-    }
-     else {
-      tmp$_0 = new Operand$Quantity(result, lhs.type);
-    }
-    return tmp$_0;
-  };
-  NoteCalcEditor$Companion.prototype.addQuantities_0 = function (lhs, rhs) {
-    return new Operand$Quantity(add(lhs.quantity, rhs.quantity), lhs.type);
-  };
-  NoteCalcEditor$Companion.prototype.subtractQuantities_0 = function (lhs, rhs) {
-    return new Operand$Quantity(subtract(lhs.quantity, rhs.quantity), lhs.type);
-  };
-  NoteCalcEditor$Companion.prototype.divideNumbers_0 = function (lhs, rhs) {
-    return new Operand$Number(Kotlin.numberToDouble(lhs.num) / Kotlin.numberToDouble(rhs.num), lhs.type);
-  };
-  NoteCalcEditor$Companion.prototype.addUnitToTheTopOfStackEntry_0 = function (targetNumber, token) {
-    var number = targetNumber.num;
-    var newQuantityWithUnit = math.unit(number + ' ' + token.unitName);
-    return new Operand$Quantity(newQuantityWithUnit, targetNumber.type);
-  };
-  function NoteCalcEditor$Companion$OperatorInfo(precedence, associativity, func) {
-    this.precedence = precedence;
-    this.associativity = associativity;
-    this.func = func;
-  }
-  NoteCalcEditor$Companion$OperatorInfo.$metadata$ = {
-    kind: Kotlin.Kind.CLASS,
-    simpleName: 'OperatorInfo',
-    interfaces: []
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.component1 = function () {
-    return this.precedence;
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.component2 = function () {
-    return this.associativity;
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.component3 = function () {
-    return this.func;
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.copy_f81brm$ = function (precedence, associativity, func) {
-    return new NoteCalcEditor$Companion$OperatorInfo(precedence === void 0 ? this.precedence : precedence, associativity === void 0 ? this.associativity : associativity, func === void 0 ? this.func : func);
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.toString = function () {
-    return 'OperatorInfo(precedence=' + Kotlin.toString(this.precedence) + (', associativity=' + Kotlin.toString(this.associativity)) + (', func=' + Kotlin.toString(this.func)) + ')';
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.hashCode = function () {
-    var result = 0;
-    result = result * 31 + Kotlin.hashCode(this.precedence) | 0;
-    result = result * 31 + Kotlin.hashCode(this.associativity) | 0;
-    result = result * 31 + Kotlin.hashCode(this.func) | 0;
-    return result;
-  };
-  NoteCalcEditor$Companion$OperatorInfo.prototype.equals = function (other) {
-    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.precedence, other.precedence) && Kotlin.equals(this.associativity, other.associativity) && Kotlin.equals(this.func, other.func)))));
-  };
-  NoteCalcEditor$Companion.prototype.getUnitnameAfterOperation_0 = function (lhsUnitname, rhsUnitname, func) {
-    var lhs = math.unit('1 ' + lhsUnitname);
-    var rhs = math.unit('1 ' + rhsUnitname);
-    var unitnameAfterOperation = drop(func(lhs, rhs).toString(), '1 '.length);
-    return unitnameAfterOperation;
-  };
-  NoteCalcEditor$Companion.prototype.applyOrPutOperatorOnTheStack_0 = function (operator, stack) {
-    var tmp$, tmp$_0, tmp$_1;
-    if (stack.size < 2) {
-      tmp$_1 = plus(stack, operator);
-    }
-     else {
-      var lastTwo = takeLast(stack, 2);
-      var lhs = lastTwo.get_za3lpa$(0);
-      var rhs = lastTwo.get_za3lpa$(1);
-      var newTokenFromApplying = (tmp$_0 = (tmp$ = this.operatorInfosForUnits_0.get_11rb$(operator.operator)) != null ? tmp$.func : null) != null ? tmp$_0(lhs, rhs) : null;
-      if (newTokenFromApplying != null) {
-        tmp$_1 = plus(dropLast(stack, 2), newTokenFromApplying);
-      }
-       else {
-        tmp$_1 = plus(stack, operator);
-      }
-    }
-    return tmp$_1;
-  };
-  NoteCalcEditor$Companion.prototype.shuntingYard_0 = function (inputTokens, functionNames) {
-    var output = Kotlin.kotlin.collections.emptyList_287e2$();
-    var operatorStack = Kotlin.kotlin.collections.emptyList_287e2$();
-    var tmp$ = this.shuntingYardRec_0(inputTokens, operatorStack, output, functionNames)
-    , newOperatorStack = tmp$.component1()
-    , newOutput = tmp$.component2();
-    var tmp$_0;
-    var accumulator = newOutput;
-    tmp$_0 = asReversed(newOperatorStack).iterator();
-    while (tmp$_0.hasNext()) {
-      var element = tmp$_0.next();
-      accumulator = this.applyOrPutOperatorOnTheStack_0(element, accumulator);
-    }
-    return accumulator;
-  };
-  NoteCalcEditor$Companion.prototype.shuntingYardRec_0 = function (inputTokens, operatorStack, output, functionNames) {
-    var tmp$_0;
-    if (inputTokens.isEmpty()) {
-      return new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, output);
-    }
-     else {
-      var inputToken = first(inputTokens);
-      if (Kotlin.isType(inputToken, Token$Operator))
-        if (Kotlin.equals(inputToken.operator, '(')) {
-          tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(plus(operatorStack, inputToken), output);
-        }
-         else if (Kotlin.equals(inputToken.operator, ')')) {
-          var modifiedStacksAfterBracketRule = this.popAnythingUntilOpeningBracket_0(operatorStack, output);
-          tmp$_0 = modifiedStacksAfterBracketRule;
-        }
-         else {
-          var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
-          , newOperatorStack = tmp$.component1()
-          , newOutput = tmp$.component2();
-          tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
-        }
-       else if (Kotlin.isType(inputToken, Token$NumberLiteral))
-        tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, plus(output, inputToken));
-      else if (Kotlin.isType(inputToken, Token$StringLiteral))
-        if (contains_0(functionNames, inputToken.str)) {
-          tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(plus(operatorStack, new Token$Operator('fun ' + inputToken.str)), plus(output, inputToken));
-        }
-         else if (Kotlin.equals(inputToken.str, ',')) {
-          tmp$_0 = this.shuntingYardOperatorRule_0(operatorStack, output, ',');
-        }
-         else {
-          tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, plus(output, inputToken));
-        }
-       else if (Kotlin.isType(inputToken, Token$UnitOfMeasure)) {
-        this.shuntingYardOperatorRule_0(operatorStack, output, 'unit');
-        tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, plus(output, inputToken));
-      }
-       else if (Kotlin.isType(inputToken, Token$Variable))
-        tmp$_0 = new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, plus(output, inputToken));
-      else
-        tmp$_0 = Kotlin.noWhenBranchMatched();
-      var tmp$_1 = tmp$_0
-      , newOperatorStack_0 = tmp$_1.component1()
-      , newOutput_0 = tmp$_1.component2();
-      return this.shuntingYardRec_0(drop_0(inputTokens, 1), newOperatorStack_0, newOutput_0, functionNames);
-    }
-  };
-  function NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, output) {
-    this.operatorStack = operatorStack;
-    this.output = output;
-  }
-  NoteCalcEditor$Companion$ShuntingYardStacks.$metadata$ = {
-    kind: Kotlin.Kind.CLASS,
-    simpleName: 'ShuntingYardStacks',
-    interfaces: []
-  };
-  NoteCalcEditor$Companion$ShuntingYardStacks.prototype.component1 = function () {
-    return this.operatorStack;
-  };
-  NoteCalcEditor$Companion$ShuntingYardStacks.prototype.component2 = function () {
-    return this.output;
-  };
-  NoteCalcEditor$Companion$ShuntingYardStacks.prototype.copy_84mo7y$ = function (operatorStack, output) {
-    return new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack === void 0 ? this.operatorStack : operatorStack, output === void 0 ? this.output : output);
-  };
-  NoteCalcEditor$Companion$ShuntingYardStacks.prototype.toString = function () {
-    return 'ShuntingYardStacks(operatorStack=' + Kotlin.toString(this.operatorStack) + (', output=' + Kotlin.toString(this.output)) + ')';
-  };
-  NoteCalcEditor$Companion$ShuntingYardStacks.prototype.hashCode = function () {
-    var result = 0;
-    result = result * 31 + Kotlin.hashCode(this.operatorStack) | 0;
-    result = result * 31 + Kotlin.hashCode(this.output) | 0;
-    return result;
-  };
-  NoteCalcEditor$Companion$ShuntingYardStacks.prototype.equals = function (other) {
-    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.operatorStack, other.operatorStack) && Kotlin.equals(this.output, other.output)))));
-  };
-  NoteCalcEditor$Companion.prototype.popAnythingUntilOpeningBracket_0 = function (operatorStack, output) {
-    if (operatorStack.isEmpty()) {
-      return new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, output);
-    }
-     else {
-      var topOfOpStack = last(operatorStack);
-      var newOperatorStack = dropLast(operatorStack, 1);
-      if (Kotlin.equals(topOfOpStack.operator, '(')) {
-        return new NoteCalcEditor$Companion$ShuntingYardStacks(newOperatorStack, output);
-      }
-      var newOutput = this.applyOrPutOperatorOnTheStack_0(topOfOpStack, output);
-      return this.popAnythingUntilOpeningBracket_0(newOperatorStack, newOutput);
-    }
-  };
-  NoteCalcEditor$Companion.prototype.shuntingYardOperatorRule_0 = function (operatorStack, output, incomingOperatorName) {
-    var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4;
-    if (operatorStack.isEmpty()) {
-      return new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, output);
-    }
-    var topOfOpStack = last(operatorStack);
-    if (contains('()', topOfOpStack.operator)) {
-      return new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, output);
-    }
-    var incomingOpPrecedence = (tmp$_0 = (tmp$ = this.operatorInfosForUnits_0.get_11rb$(incomingOperatorName)) != null ? tmp$.precedence : null) != null ? tmp$_0 : 0;
-    var topOfStackPrecedence = (tmp$_2 = (tmp$_1 = this.operatorInfosForUnits_0.get_11rb$(topOfOpStack.operator)) != null ? tmp$_1.precedence : null) != null ? tmp$_2 : 0;
-    var assoc = (tmp$_4 = (tmp$_3 = this.operatorInfosForUnits_0.get_11rb$(incomingOperatorName)) != null ? tmp$_3.associativity : null) != null ? tmp$_4 : 'left';
-    var incomingPrecLeftAssocAndEqual = Kotlin.equals(assoc, 'left') && incomingOpPrecedence === topOfStackPrecedence;
-    if (incomingOpPrecedence < topOfStackPrecedence || incomingPrecLeftAssocAndEqual) {
-      var last_0 = last(operatorStack);
-      return this.shuntingYardOperatorRule_0(dropLast(operatorStack, 1), this.applyOrPutOperatorOnTheStack_0(last_0, output), incomingOperatorName);
-    }
-     else {
-      return new NoteCalcEditor$Companion$ShuntingYardStacks(operatorStack, output);
-    }
-  };
   function NoteCalcEditor$Companion$HighlightedText(text_0, cssClassName) {
     this.text = text_0;
     this.cssClassName = cssClassName;
@@ -1597,197 +1147,6 @@ var NoteCalcJS = function (_, Kotlin) {
   };
   NoteCalcEditor$Companion$HighlightedText.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.text, other.text) && Kotlin.equals(this.cssClassName, other.cssClassName)))));
-  };
-  NoteCalcEditor$Companion.prototype.mergeCompoundUnitsAndUnaryMinusOperators_0 = function (tokens) {
-    var tmp$;
-    var restTokens = tokens;
-    var output = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
-    var prevToken = new Token$StringLiteral('');
-    var codeSmell = false;
-    while (!restTokens.isEmpty()) {
-      var token = first(restTokens);
-      if (Kotlin.isType(token, Token$NumberLiteral)) {
-        output.add_11rb$(token);
-        tmp$ = drop_0(restTokens, 1);
-      }
-       else if (Kotlin.isType(token, Token$Variable)) {
-        output.add_11rb$(token);
-        tmp$ = drop_0(restTokens, 1);
-      }
-       else if (Kotlin.isType(token, Token$StringLiteral)) {
-        output.add_11rb$(token);
-        tmp$ = drop_0(restTokens, 1);
-      }
-       else if (Kotlin.isType(token, Token$Operator)) {
-        output.add_11rb$(token);
-        tmp$ = drop_0(restTokens, 1);
-      }
-       else if (Kotlin.isType(token, Token$UnitOfMeasure)) {
-        if (Kotlin.isType(prevToken, Token$Operator) || Kotlin.isType(prevToken, Token$StringLiteral) || Kotlin.isType(prevToken, Token$NumberLiteral) || Kotlin.isType(prevToken, Token$Variable)) {
-          var compundUnitResult = this.parseCompundUnit_0(restTokens);
-          if (compundUnitResult != null) {
-            var tokenCountInThisUnit = compundUnitResult.tokens.size;
-            restTokens = drop_0(restTokens, tokenCountInThisUnit);
-            output.add_11rb$(compundUnitResult);
-            codeSmell = true;
-          }
-        }
-        if (codeSmell) {
-          tmp$ = restTokens;
-        }
-         else {
-          output.add_11rb$(token);
-          tmp$ = drop_0(restTokens, 1);
-        }
-      }
-       else
-        tmp$ = Kotlin.noWhenBranchMatched();
-      restTokens = tmp$;
-      prevToken = token;
-      codeSmell = false;
-    }
-    return output;
-  };
-  NoteCalcEditor$Companion.prototype.createHighlightingNamesForTokens_0 = function (tokens) {
-    var highlightInfosForTokens = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
-    var tmp$;
-    tmp$ = tokens.iterator();
-    while (tmp$.hasNext()) {
-      var element = tmp$.next();
-      if (Kotlin.isType(element, Token$NumberLiteral)) {
-        var strRepr = element.originalStringRepresentation.length === 0 ? element.num.toString() : element.originalStringRepresentation;
-        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(strRepr, 'number'));
-      }
-       else if (Kotlin.isType(element, Token$Variable))
-        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.variableName, 'variable'));
-      else if (Kotlin.isType(element, Token$StringLiteral))
-        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.str, 'comment'));
-      else if (Kotlin.isType(element, Token$Operator))
-        highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.operator, 'operator'));
-      else if (Kotlin.isType(element, Token$UnitOfMeasure))
-        if (element.tokens.isEmpty()) {
-          highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(element.unitName, 'qualifier'));
-        }
-         else {
-          var tmp$_0;
-          tmp$_0 = element.tokens.iterator();
-          while (tmp$_0.hasNext()) {
-            var element_0 = tmp$_0.next();
-            highlightInfosForTokens.add_11rb$(new NoteCalcEditor$Companion$HighlightedText(this.getStringRepresentation_0(element_0), 'qualifier'));
-          }
-        }
-       else
-        Kotlin.noWhenBranchMatched();
-    }
-    return highlightInfosForTokens;
-  };
-  NoteCalcEditor$Companion.prototype.getStringRepresentation_0 = function (token) {
-    var tmp$;
-    if (Kotlin.isType(token, Token$UnitOfMeasure))
-      tmp$ = token.unitName;
-    else if (Kotlin.isType(token, Token$NumberLiteral)) {
-      tmp$ = token.originalStringRepresentation.length === 0 ? token.num.toString() : token.originalStringRepresentation;
-    }
-     else if (Kotlin.isType(token, Token$Operator))
-      tmp$ = token.operator;
-    else if (Kotlin.isType(token, Token$StringLiteral))
-      tmp$ = token.str;
-    else if (Kotlin.isType(token, Token$Variable))
-      tmp$ = token.variableName;
-    else
-      tmp$ = Kotlin.noWhenBranchMatched();
-    var text_0 = tmp$;
-    return text_0;
-  };
-  NoteCalcEditor$Companion.prototype.parseCompundUnit_0 = function (tokens) {
-    if (tokens.size <= 1) {
-      return null;
-    }
-    var prevToken = {v: new Token$StringLiteral('')};
-    var tmp$;
-    var list = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
-    tmp$ = tokens.iterator();
-    while (tmp$.hasNext()) {
-      var item = tmp$.next();
-      var tmp$_0, tmp$_1;
-      if (Kotlin.isType(item, Token$Operator))
-        tmp$_1 = contains_1(['*', '/', '^', '(', ')'], item.operator);
-      else if (Kotlin.isType(item, Token$NumberLiteral))
-        tmp$_1 = (Kotlin.isType(prevToken.v, Token$Operator) && Kotlin.equals((Kotlin.isType(tmp$_0 = prevToken.v, Token$Operator) ? tmp$_0 : Kotlin.throwCCE()).operator, '^'));
-      else if (Kotlin.isType(item, Token$UnitOfMeasure))
-        tmp$_1 = true;
-      else
-        tmp$_1 = false;
-      var result = tmp$_1;
-      prevToken.v = item;
-      if (!result) {
-        break;
-      }
-      list.add_11rb$(item);
-    }
-    var tokensThatTogetherMayFormACompundUnit = list;
-    if (!tokensThatTogetherMayFormACompundUnit.isEmpty()) {
-      var maybeCompoundUnit = this.tryFindCorrectCompoundUnit_0(tokensThatTogetherMayFormACompundUnit);
-      return maybeCompoundUnit;
-    }
-    return null;
-  };
-  NoteCalcEditor$Companion.prototype.tryFindCorrectCompoundUnit_0 = function (tokenGroup) {
-    var expressionString = joinToString(tokenGroup, '', void 0, void 0, void 0, void 0, Kotlin.getCallableRef('asString', function ($receiver) {
-      return $receiver.asString();
-    }));
-    try {
-      var compundUnit = math.unit('1 ' + expressionString);
-      var compundUnitname = replace(drop(compundUnit.toString(), '1 '.length), ' ', '');
-      if (!Kotlin.equals(compundUnitname, expressionString)) {
-        return null;
-      }
-      return new Token$UnitOfMeasure(compundUnitname, tokenGroup);
-    }
-     catch (e) {
-      if (Kotlin.isType(e, Throwable)) {
-        return this.tryFindCorrectCompoundUnit_0(dropLast(tokenGroup, 1));
-      }
-       else
-        throw e;
-    }
-  };
-  function NoteCalcEditor$Companion$assertTokenListEq$lambda(closure$actualTokens, closure$expectedTokens, this$NoteCalcEditor$) {
-    return function (assert) {
-      assert.equal(closure$actualTokens.size, closure$expectedTokens.length);
-      var $receiver = zip_0(closure$expectedTokens, closure$actualTokens);
-      var tmp$;
-      tmp$ = $receiver.iterator();
-      while (tmp$.hasNext()) {
-        var element = tmp$.next();
-        var this$NoteCalcEditor$_0 = this$NoteCalcEditor$;
-        var expected = element.component1()
-        , actual = element.component2();
-        var tmp$_0, tmp$_1, tmp$_2, tmp$_3;
-        if (Kotlin.isType(expected, Token$NumberLiteral)) {
-          tmp$_0 = expected.type;
-          if (Kotlin.equals(tmp$_0, NumberType$Int_getInstance()))
-            tmp$_3 = Kotlin.numberToInt(expected.num) === Kotlin.numberToInt((Kotlin.isType(tmp$_1 = actual, Token$NumberLiteral) ? tmp$_1 : Kotlin.throwCCE()).num);
-          else if (Kotlin.equals(tmp$_0, NumberType$Float_getInstance()))
-            tmp$_3 = this$NoteCalcEditor$_0.compareFloats_0(actual, expected, 2);
-          else
-            tmp$_3 = Kotlin.noWhenBranchMatched();
-        }
-         else if (Kotlin.isType(expected, Token$UnitOfMeasure))
-          tmp$_3 = Kotlin.equals(expected.unitName, (Kotlin.isType(tmp$_2 = actual, Token$UnitOfMeasure) ? tmp$_2 : Kotlin.throwCCE()).unitName);
-        else
-          tmp$_3 = Kotlin.equals(expected, actual);
-        var ok = tmp$_3;
-        assert.ok(ok, 'expected: ' + expected + ' but was: ' + actual);
-      }
-    };
-  }
-  NoteCalcEditor$Companion.prototype.assertTokenListEq_0 = function (actualTokens, expectedTokens) {
-    QUnit.test('', NoteCalcEditor$Companion$assertTokenListEq$lambda(actualTokens, expectedTokens, this));
-  };
-  NoteCalcEditor$Companion.prototype.compareFloats_0 = function (actual, expected, decimalCount) {
-    var tmp$;
-    return (Kotlin.numberToDouble(expected.num) * Math.pow(10.0, decimalCount) | 0) === (Kotlin.numberToDouble((Kotlin.isType(tmp$ = actual, Token$NumberLiteral) ? tmp$ : Kotlin.throwCCE()).num) * 100 | 0);
   };
   function NoteCalcEditor$Companion$LineAndTokens(line, postfixNotationStack) {
     this.line = line;
@@ -1854,71 +1213,6 @@ var NoteCalcJS = function (_, Kotlin) {
   NoteCalcEditor$Companion$FunctionDefinition.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.name, other.name) && Kotlin.equals(this.argumentNames, other.argumentNames) && Kotlin.equals(this.tokenLines, other.tokenLines)))));
   };
-  function NoteCalcEditor$Companion$parse$lambda(closure$variableNames) {
-    return function (str) {
-      return tryParseVariableName(str, closure$variableNames);
-    };
-  }
-  function NoteCalcEditor$Companion$parse$lambda_0(closure$functionNames) {
-    return function (str) {
-      return tryParseFunctionInvocation(str, closure$functionNames);
-    };
-  }
-  NoteCalcEditor$Companion.prototype.parse_0 = function (text_0, variableNames, functionNames) {
-    if (variableNames === void 0)
-      variableNames = emptyList();
-    if (functionNames === void 0)
-      functionNames = emptyList();
-    var tmp$, tmp$_0;
-    var tokens = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
-    var tmp$_1;
-    var str = {v: Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_1 = text_0) ? tmp$_1 : Kotlin.throwCCE()).toString()};
-    while (str.v.length > 0) {
-      var originalLength = str.v.length;
-      var tokenAndRest = tryExtractToken(str.v, [NoteCalcEditor$Companion$parse$lambda(variableNames), NoteCalcEditor$Companion$parse$lambda_0(functionNames), Kotlin.getCallableRef('tryExtractOperator', function (str_0) {
-        return tryExtractOperator(str_0);
-      }), Kotlin.getCallableRef('tryExtractNumberLiteral', function (str_0) {
-        return tryExtractNumberLiteral(str_0);
-      }), Kotlin.getCallableRef('tryExtractUnit', function (str_0) {
-        return tryExtractUnit(str_0);
-      }), Kotlin.getCallableRef('tryExtractStringLiteral', function (str_0) {
-        return tryExtractStringLiteral(str_0);
-      })]);
-      if (tokenAndRest != null) {
-        var $receiver = tokenAndRest.second;
-        var tmp$_2;
-        str.v = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_2 = $receiver) ? tmp$_2 : Kotlin.throwCCE()).toString();
-      }
-       else {
-        break;
-      }
-      var token = tokenAndRest.first;
-      var prevToken = lastOrNull(tokens);
-      if (Kotlin.isType(prevToken, Token$NumberLiteral) && Kotlin.isType(token, Token$StringLiteral) && token.str.length === 1 && contains_2('kM', Kotlin.unboxChar(first_0(token.str)))) {
-        tmp$ = token.str;
-        if (Kotlin.equals(tmp$, 'k'))
-          tmp$_0 = Kotlin.numberToDouble(prevToken.num) * 1000;
-        else if (Kotlin.equals(tmp$, 'M'))
-          tmp$_0 = Kotlin.numberToDouble(prevToken.num) * 1000000;
-        else {
-          var message = "can't happen";
-          throw new Kotlin.kotlin.IllegalStateException(message.toString());
-        }
-        var newNumber = tmp$_0;
-        var newStringRepresentation = prevToken.originalStringRepresentation + token.str;
-        tokens.removeAt_za3lpa$(get_lastIndex(tokens));
-        tokens.add_11rb$(new Token$NumberLiteral(newNumber, newStringRepresentation, prevToken.type));
-      }
-       else {
-        tokens.add_11rb$(token);
-      }
-      if (!(str.v.length < originalLength)) {
-        var message_0 = str.v + ': The length of the processing string must be shorter at the end of the block! ' + originalLength;
-        throw new Kotlin.kotlin.IllegalArgumentException(message_0.toString());
-      }
-    }
-    return tokens;
-  };
   function NoteCalcEditor$Companion$tokenizer$lambda(tokenStyles, stream, state) {
     var index = state.index;
     var tokenToHighlight = getOrNull(tokenStyles, index);
@@ -1957,73 +1251,6 @@ var NoteCalcJS = function (_, Kotlin) {
         }
       }
     }
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda(lhs, rhs) {
-    return null;
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_0(lhs, rhs) {
-    if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$NumberLiteral)) {
-      var num = rhs.num;
-      var poweredUnit = pow(math.unit('1 ' + lhs.unitName), num);
-      var poweredUnitname = drop(poweredUnit.toString(), '1 '.length);
-      return new Token$UnitOfMeasure(poweredUnitname);
-    }
-     else {
-      return null;
-    }
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_1(lhs, rhs) {
-    return null;
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_2(lhs, rhs) {
-    return null;
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_3(lhs, rhs) {
-    return null;
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_4(lhs, rhs) {
-    return null;
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_5(this$NoteCalcEditor$) {
-    return function (lhs, rhs) {
-      if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$UnitOfMeasure)) {
-        var unitnameAfterOperation = this$NoteCalcEditor$.getUnitnameAfterOperation_0(lhs.unitName, rhs.unitName, Kotlin.getCallableRef('multiply', function ($receiver, other) {
-          return multiply($receiver, other);
-        }));
-        return new Token$UnitOfMeasure(unitnameAfterOperation);
-      }
-       else {
-        return null;
-      }
-    };
-  }
-  function NoteCalcEditor$Companion$operatorInfosForUnits$lambda_6(this$NoteCalcEditor$) {
-    return function (lhs, rhs) {
-      if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$UnitOfMeasure)) {
-        var unitnameAfterOperation = this$NoteCalcEditor$.getUnitnameAfterOperation_0(lhs.unitName, rhs.unitName, Kotlin.getCallableRef('divide', function ($receiver, other) {
-          return divide($receiver, other);
-        }));
-        return new Token$UnitOfMeasure(unitnameAfterOperation);
-      }
-       else {
-        return null;
-      }
-    };
-  }
-  function NoteCalcEditor$NoteCalcEditor$Companion_init$num(n) {
-    return new Token$NumberLiteral(n, '', NumberType$Int_getInstance());
-  }
-  function NoteCalcEditor$NoteCalcEditor$Companion_init$num_0(n) {
-    return new Token$NumberLiteral(n, '', NumberType$Float_getInstance());
-  }
-  function NoteCalcEditor$NoteCalcEditor$Companion_init$op(n) {
-    return new Token$Operator(n);
-  }
-  function NoteCalcEditor$NoteCalcEditor$Companion_init$str(n) {
-    return new Token$StringLiteral(n);
-  }
-  function NoteCalcEditor$NoteCalcEditor$Companion_init$unit(n) {
-    return new Token$UnitOfMeasure(n);
   }
   NoteCalcEditor$Companion.$metadata$ = {
     kind: Kotlin.Kind.OBJECT,
@@ -2082,13 +1309,158 @@ var NoteCalcJS = function (_, Kotlin) {
     }
   }
   NumberType.valueOf_61zpoe$ = NumberType$valueOf;
+  function NoteCalcEditorTest() {
+    this.tokenParser_0 = new TokenParser();
+    this.tokenListSimplifier_0 = new TokenListSimplifier();
+  }
+  function NoteCalcEditorTest$runTests$num(n) {
+    return new Token$NumberLiteral(n, '', NumberType$Int_getInstance());
+  }
+  function NoteCalcEditorTest$runTests$num_0(n) {
+    return new Token$NumberLiteral(n, '', NumberType$Float_getInstance());
+  }
+  function NoteCalcEditorTest$runTests$op(n) {
+    return new Token$Operator(n);
+  }
+  function NoteCalcEditorTest$runTests$str(n) {
+    return new Token$StringLiteral(n);
+  }
+  function NoteCalcEditorTest$runTests$unit(n) {
+    return new Token$UnitOfMeasure(n);
+  }
+  NoteCalcEditorTest.prototype.runTests = function () {
+    var num = NoteCalcEditorTest$runTests$num;
+    var num_0 = NoteCalcEditorTest$runTests$num_0;
+    var op = NoteCalcEditorTest$runTests$op;
+    var str = NoteCalcEditorTest$runTests$str;
+    var unit = NoteCalcEditorTest$runTests$unit;
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('1+2.0'), [num(1), op('+'), num_0(2.0)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('200kg alma + 300 kg ban\xE1n'), [num(200), unit('kg'), str('alma'), op('+'), num(300), unit('kg'), str('ban\xE1n')]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('(1 alma + 4 k\xF6rte) * 3 ember'), [op('('), num(1), str('alma'), op('+'), num(4), str('k\xF6rte'), op(')'), op('*'), num(3), str('ember')]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('1/2s'), [num(1), op('/'), num(2), unit('s')]);
+    this.assertTokenListEq_0((new LineParser()).shuntingYard_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('1/2s')), emptyList()), [num(1), num(2), unit('s'), op('/')]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('0b00101 & 0xFF ^ 0xFF00 << 16 >> 16 ! 0xFF'), [num(5), op('&'), num(255), op('^'), num(65280), op('<<'), num(16), op('>>'), num(16), op('!'), num(255)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('10km/h * 45min in m'), [num(10), unit('km'), op('/'), unit('h'), op('*'), num(45), unit('min'), op('in'), unit('m')]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('10(km/h)^2 * 45min in m'), [num(10), op('('), unit('km'), op('/'), unit('h'), op(')'), op('^'), num(2), op('*'), num(45), unit('min'), op('in'), unit('m')]);
+    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('12km/h')), [num(12), unit('km/h')]);
+    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('12km/h*3')), [num(12), unit('km/h'), op('*'), num(3)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('-3'), [op('-'), num(3)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0xFF'), [op('-'), num(255)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0b110011'), [op('-'), num(51)]);
+    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('-3')), [op('-'), num(3)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0xFF'), [op('-'), num(255)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0b110011'), [op('-'), num(51)]);
+    this.assertEq_0('30 km', '(10+20)km');
+    this.assertEq_0('7500 m', '10(km/h) * 45min in m');
+    this.assertEq_0('500 kg', '200kg alma + 300 kg ban\xE1n');
+    this.assertEq_1(new Operand$Number(15), '(1 alma + 4 k\xF6rte) * 3 ember');
+    this.assertEq_1(new Operand$Percentage(5), '10 as a % of 200');
+    this.assertEq_1(new Operand$Percentage(30), '10% + 20%');
+    this.assertEq_1(new Operand$Number(220), '200 + 10%');
+    this.assertEq_1(new Operand$Number(180), '200 - 10%');
+    this.assertEq_1(new Operand$Number(20), '200 * 10%');
+    this.assertEq_1(new Operand$Number(181.82, NumberType$Float_getInstance()), '10% on what is $200');
+    this.assertEq_1(new Operand$Number(2000), '10% of what is $200');
+    this.assertEq_1(new Operand$Number(222.22, NumberType$Float_getInstance()), '10% off what is $200');
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('I traveled with 45km/h for / 13km in min'), [str('I'), str('traveled'), str('with'), num(45), unit('km'), op('/'), unit('h'), str('for'), op('/'), num(13), unit('km'), op('in'), unit('min')]);
+    this.assertEq_0('19.5 min', 'I traveled 13km / at a rate 40km/h in min');
+    this.assertEq_0('12 mile/h', 'I traveled 24 miles and rode my bike  / 2 hours');
+    this.assertEq_0('40 mile', "Now let's say you rode your bike at a rate of 10 miles/h for * 4 h");
+    this.assertEq_1(new Operand$Number(9), '12-3');
+    this.assertEq_1(new Operand$Number(1027), '2^10 + 3');
+    this.assertEq_1(new Operand$Number(163), '1+2*3^4');
+    this.assertEq_0('0.5s', '1/2s');
+    this.assertEq_0('0.5s', '1/(2s)');
+    this.assertEq_1(new Operand$Number(60), '15 EUR ad\xF3mentes azaz 75-15 eur\xF3b\xF3l kell ad\xF3zni');
+    this.assertEq_0('0.529 GB / seconds', 'transfer of around 1.587GB in about / 3 seconds');
+    this.assertEq_0('37.5 MB', 'A is a unit but should not be handled here so... 37.5MB of DNA information in it.');
+    this.assertEq_1(new Operand$Number(1000), '3k - 2k');
+    this.assertEq_1(new Operand$Number(1000000), '3M - 2M');
+    this.assertEq_1(new Operand$Number(100), '1GB / 10MB');
+  };
+  function NoteCalcEditorTest$assertEq$lambda(this$NoteCalcEditorTest, closure$actualInput, closure$expectedValue) {
+    return function (assert) {
+      var tmp$, tmp$_0;
+      var actual = Kotlin.isType(tmp$_0 = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$((new LineParser()).shuntingYard_0(this$NoteCalcEditorTest.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this$NoteCalcEditorTest.tokenParser_0.parse_0(closure$actualInput)), emptyList()), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE(), Operand$Quantity) ? tmp$_0 : Kotlin.throwCCE();
+      assert.ok(math.unit(closure$expectedValue).equals(actual.quantity), closure$expectedValue + ' != ' + actual);
+    };
+  }
+  NoteCalcEditorTest.prototype.assertEq_0 = function (expectedValue, actualInput) {
+    QUnit.test(actualInput, NoteCalcEditorTest$assertEq$lambda(this, actualInput, expectedValue));
+  };
+  function NoteCalcEditorTest$assertEq$lambda_0(a, b) {
+    return Math.round(Kotlin.numberToDouble(a) * 100) === Math.round(Kotlin.numberToDouble(b) * 100);
+  }
+  function NoteCalcEditorTest$assertEq$lambda_1(this$NoteCalcEditorTest, closure$actualInput, closure$expectedValue, closure$floatEq) {
+    return function (assert) {
+      var tmp$, tmp$_0, tmp$_1;
+      var actual = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$((new LineParser()).shuntingYard_0(this$NoteCalcEditorTest.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this$NoteCalcEditorTest.tokenParser_0.parse_0(closure$actualInput)), emptyList()), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE();
+      tmp$_0 = closure$expectedValue;
+      if (Kotlin.isType(tmp$_0, Operand$Number))
+        tmp$_1 = (Kotlin.isType(actual, Operand$Number) && closure$floatEq(actual.num, closure$expectedValue.num));
+      else if (Kotlin.isType(tmp$_0, Operand$Quantity))
+        tmp$_1 = (Kotlin.isType(actual, Operand$Quantity) && actual.quantity.equals(closure$expectedValue.quantity));
+      else if (Kotlin.isType(tmp$_0, Operand$Percentage))
+        tmp$_1 = (Kotlin.isType(actual, Operand$Percentage) && closure$floatEq(actual.num, closure$expectedValue.num));
+      else
+        tmp$_1 = Kotlin.noWhenBranchMatched();
+      var ok = tmp$_1;
+      assert.ok(ok, closure$expectedValue.asString() + ' != ' + actual.asString());
+    };
+  }
+  NoteCalcEditorTest.prototype.assertEq_1 = function (expectedValue, actualInput) {
+    var floatEq = NoteCalcEditorTest$assertEq$lambda_0;
+    QUnit.test(actualInput, NoteCalcEditorTest$assertEq$lambda_1(this, actualInput, expectedValue, floatEq));
+  };
+  function NoteCalcEditorTest$assertTokenListEq$lambda(closure$actualTokens, closure$expectedTokens, this$NoteCalcEditorTest) {
+    return function (assert) {
+      assert.equal(closure$actualTokens.size, closure$expectedTokens.length);
+      var $receiver = zip(closure$expectedTokens, closure$actualTokens);
+      var tmp$;
+      tmp$ = $receiver.iterator();
+      while (tmp$.hasNext()) {
+        var element = tmp$.next();
+        var this$NoteCalcEditorTest_0 = this$NoteCalcEditorTest;
+        var expected = element.component1()
+        , actual = element.component2();
+        var tmp$_0, tmp$_1, tmp$_2, tmp$_3;
+        if (Kotlin.isType(expected, Token$NumberLiteral)) {
+          tmp$_0 = expected.type;
+          if (Kotlin.equals(tmp$_0, NumberType$Int_getInstance()))
+            tmp$_3 = Kotlin.numberToInt(expected.num) === Kotlin.numberToInt((Kotlin.isType(tmp$_1 = actual, Token$NumberLiteral) ? tmp$_1 : Kotlin.throwCCE()).num);
+          else if (Kotlin.equals(tmp$_0, NumberType$Float_getInstance()))
+            tmp$_3 = this$NoteCalcEditorTest_0.compareFloats_0(actual, expected, 2);
+          else
+            tmp$_3 = Kotlin.noWhenBranchMatched();
+        }
+         else if (Kotlin.isType(expected, Token$UnitOfMeasure))
+          tmp$_3 = Kotlin.equals(expected.unitName, (Kotlin.isType(tmp$_2 = actual, Token$UnitOfMeasure) ? tmp$_2 : Kotlin.throwCCE()).unitName);
+        else
+          tmp$_3 = Kotlin.equals(expected, actual);
+        var ok = tmp$_3;
+        assert.ok(ok, 'expected: ' + expected + ' but was: ' + actual);
+      }
+    };
+  }
+  NoteCalcEditorTest.prototype.assertTokenListEq_0 = function (actualTokens, expectedTokens) {
+    QUnit.test('', NoteCalcEditorTest$assertTokenListEq$lambda(actualTokens, expectedTokens, this));
+  };
+  NoteCalcEditorTest.prototype.compareFloats_0 = function (actual, expected, decimalCount) {
+    var tmp$;
+    return (Kotlin.numberToDouble(expected.num) * Math.pow(10.0, decimalCount) | 0) === (Kotlin.numberToDouble((Kotlin.isType(tmp$ = actual, Token$NumberLiteral) ? tmp$ : Kotlin.throwCCE()).num) * 100 | 0);
+  };
+  NoteCalcEditorTest.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'NoteCalcEditorTest',
+    interfaces: []
+  };
   function Operand() {
   }
-  function Operand$Percentage(num, type) {
+  function Operand$Percentage(num_1, type) {
     if (type === void 0)
-      type = typeof num === 'number' ? NumberType$Int_getInstance() : NumberType$Float_getInstance();
+      type = typeof num_1 === 'number' ? NumberType$Int_getInstance() : NumberType$Float_getInstance();
     Operand.call(this);
-    this.num = num;
+    this.num = num_1;
     this.type = type;
   }
   Operand$Percentage.prototype.asString = function () {
@@ -2108,8 +1480,8 @@ var NoteCalcJS = function (_, Kotlin) {
   Operand$Percentage.prototype.component2 = function () {
     return this.type;
   };
-  Operand$Percentage.prototype.copy_eilmgh$ = function (num, type) {
-    return new Operand$Percentage(num === void 0 ? this.num : num, type === void 0 ? this.type : type);
+  Operand$Percentage.prototype.copy_eilmgh$ = function (num_1, type) {
+    return new Operand$Percentage(num_1 === void 0 ? this.num : num_1, type === void 0 ? this.type : type);
   };
   Operand$Percentage.prototype.toString = function () {
     return 'Percentage(num=' + Kotlin.toString(this.num) + (', type=' + Kotlin.toString(this.type)) + ')';
@@ -2123,11 +1495,11 @@ var NoteCalcJS = function (_, Kotlin) {
   Operand$Percentage.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.num, other.num) && Kotlin.equals(this.type, other.type)))));
   };
-  function Operand$Number(num, type) {
+  function Operand$Number(num_1, type) {
     if (type === void 0)
-      type = typeof num === 'number' ? NumberType$Int_getInstance() : NumberType$Float_getInstance();
+      type = typeof num_1 === 'number' ? NumberType$Int_getInstance() : NumberType$Float_getInstance();
     Operand.call(this);
-    this.num = num;
+    this.num = num_1;
     this.type = type;
   }
   Operand$Number.prototype.asString = function () {
@@ -2147,8 +1519,8 @@ var NoteCalcJS = function (_, Kotlin) {
   Operand$Number.prototype.component2 = function () {
     return this.type;
   };
-  Operand$Number.prototype.copy_eilmgh$ = function (num, type) {
-    return new Operand$Number(num === void 0 ? this.num : num, type === void 0 ? this.type : type);
+  Operand$Number.prototype.copy_eilmgh$ = function (num_1, type) {
+    return new Operand$Number(num_1 === void 0 ? this.num : num_1, type === void 0 ? this.type : type);
   };
   Operand$Number.prototype.toString = function () {
     return 'Number(num=' + Kotlin.toString(this.num) + (', type=' + Kotlin.toString(this.type)) + ')';
@@ -2242,9 +1614,9 @@ var NoteCalcJS = function (_, Kotlin) {
   Token$UnitOfMeasure.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.unitName, other.unitName) && Kotlin.equals(this.tokens, other.tokens)))));
   };
-  function Token$StringLiteral(str) {
+  function Token$StringLiteral(str_0) {
     Token.call(this);
-    this.str = str;
+    this.str = str_0;
   }
   Token$StringLiteral.prototype.asString = function () {
     return this.str;
@@ -2260,8 +1632,8 @@ var NoteCalcJS = function (_, Kotlin) {
   Token$StringLiteral.prototype.component1 = function () {
     return this.str;
   };
-  Token$StringLiteral.prototype.copy_61zpoe$ = function (str) {
-    return new Token$StringLiteral(str === void 0 ? this.str : str);
+  Token$StringLiteral.prototype.copy_61zpoe$ = function (str_0) {
+    return new Token$StringLiteral(str_0 === void 0 ? this.str : str_0);
   };
   Token$StringLiteral.prototype.hashCode = function () {
     var result = 0;
@@ -2300,9 +1672,9 @@ var NoteCalcJS = function (_, Kotlin) {
   Token$Variable.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && Kotlin.equals(this.variableName, other.variableName))));
   };
-  function Token$NumberLiteral(num, originalStringRepresentation, type) {
+  function Token$NumberLiteral(num_1, originalStringRepresentation, type) {
     Token.call(this);
-    this.num = num;
+    this.num = num_1;
     this.originalStringRepresentation = originalStringRepresentation;
     this.type = type;
   }
@@ -2326,8 +1698,8 @@ var NoteCalcJS = function (_, Kotlin) {
   Token$NumberLiteral.prototype.component3 = function () {
     return this.type;
   };
-  Token$NumberLiteral.prototype.copy_lwrnp9$ = function (num, originalStringRepresentation, type) {
-    return new Token$NumberLiteral(num === void 0 ? this.num : num, originalStringRepresentation === void 0 ? this.originalStringRepresentation : originalStringRepresentation, type === void 0 ? this.type : type);
+  Token$NumberLiteral.prototype.copy_lwrnp9$ = function (num_1, originalStringRepresentation, type) {
+    return new Token$NumberLiteral(num_1 === void 0 ? this.num : num_1, originalStringRepresentation === void 0 ? this.originalStringRepresentation : originalStringRepresentation, type === void 0 ? this.type : type);
   };
   Token$NumberLiteral.prototype.hashCode = function () {
     var result = 0;
@@ -2373,21 +1745,692 @@ var NoteCalcJS = function (_, Kotlin) {
     simpleName: 'Token',
     interfaces: []
   };
-  function tryExtractToken(str, tokenRecognizers) {
+  function TokenListEvaulator() {
+  }
+  TokenListEvaulator.prototype.processPostfixNotationStackRec_oxe9kf$ = function (quantitativeStack, tokens, lastUnit, variables, functions) {
+    var tmp$, tmp$_0, tmp$_1;
+    if (tokens.isEmpty()) {
+      return quantitativeStack;
+    }
+    var lastUnit_0 = lastUnit;
+    var incomingToken = first(tokens);
+    if (Kotlin.isType(incomingToken, Token$NumberLiteral))
+      tmp$_1 = plus(quantitativeStack, new Operand$Number(incomingToken.num, incomingToken.type));
+    else if (Kotlin.isType(incomingToken, Token$Variable)) {
+      var variable = variables.get_11rb$(incomingToken.variableName);
+      if (variable != null) {
+        tmp$_1 = plus(quantitativeStack, variable);
+      }
+       else
+        tmp$_1 = quantitativeStack;
+    }
+     else if (Kotlin.isType(incomingToken, Token$UnitOfMeasure)) {
+      var topOfStack = lastOrNull(quantitativeStack);
+      if (topOfStack != null && Kotlin.isType(topOfStack, Operand$Number)) {
+        tmp$_1 = plus(dropLast(quantitativeStack, 1), this.addUnitToTheTopOfStackEntry_0(topOfStack, incomingToken));
+      }
+       else {
+        lastUnit_0 = incomingToken.unitName;
+        tmp$_1 = quantitativeStack;
+      }
+    }
+     else if (Kotlin.isType(incomingToken, Token$Operator))
+      if (startsWith_0(incomingToken.operator, 'fun ')) {
+        var funcName = drop_0(incomingToken.operator, 'fun '.length);
+        var functionDef = functions.get_11rb$(funcName);
+        if (functionDef != null && quantitativeStack.size >= functionDef.argumentNames.size) {
+          var arguments_0 = takeLast(quantitativeStack, functionDef.argumentNames.size);
+          var methodScope = HashMap_init(plus_0(variables, toMap(zip_0(functionDef.argumentNames, arguments_0))));
+          var $receiver = functionDef.tokenLines;
+          var destination = Kotlin.kotlin.collections.ArrayList_init_ww73n8$(Kotlin.kotlin.collections.collectionSizeOrDefault_ba2ldo$($receiver, 10));
+          var tmp$_2;
+          tmp$_2 = $receiver.iterator();
+          while (tmp$_2.hasNext()) {
+            var item = tmp$_2.next();
+            var tmp$_3 = destination.add_11rb$;
+            var tmp$_4;
+            var lastToken = lastOrNull(item.postfixNotationStack);
+            var resultOperand_1 = this.processPostfixNotationStack_h27eq8$(item.postfixNotationStack, methodScope, functions);
+            if (resultOperand_1 != null && Kotlin.isType(lastToken, Token$Operator) && Kotlin.equals(lastToken.operator, '=')) {
+              var $receiver_0 = item.line;
+              var takeWhile$result;
+              takeWhile$break: {
+                var tmp$_5;
+                tmp$_5 = $receiver_0.length - 1 | 0;
+                for (var index = 0; index <= tmp$_5; index++) {
+                  if (!(Kotlin.unboxChar(Kotlin.toBoxedChar($receiver_0.charCodeAt(index))) !== 61)) {
+                    takeWhile$result = $receiver_0.substring(0, index);
+                    break takeWhile$break;
+                  }
+                }
+                takeWhile$result = $receiver_0;
+              }
+              var $receiver_1 = takeWhile$result;
+              var tmp$_6;
+              tmp$_4 = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_6 = $receiver_1) ? tmp$_6 : Kotlin.throwCCE()).toString();
+            }
+             else
+              tmp$_4 = null;
+            var currentVariableName = tmp$_4;
+            if (currentVariableName != null && resultOperand_1 != null) {
+              methodScope.put_xwzc9p$(currentVariableName, resultOperand_1);
+            }
+            tmp$_3.call(destination, resultOperand_1);
+          }
+          var resultOperand = lastOrNull(destination);
+          if (resultOperand != null) {
+            tmp$_1 = plus(dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0), resultOperand);
+          }
+           else {
+            tmp$_1 = dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0);
+          }
+        }
+         else {
+          tmp$_1 = dropLast(quantitativeStack, 1);
+        }
+      }
+       else {
+        if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, '%')) {
+          var topOfStack_0 = last(quantitativeStack);
+          if (Kotlin.isType(topOfStack_0, Operand$Number)) {
+            var num_1 = topOfStack_0.num;
+            tmp$_1 = plus(dropLast(quantitativeStack, 1), new Operand$Percentage(num_1, topOfStack_0.type));
+          }
+           else {
+            tmp$_1 = dropLast(quantitativeStack, 1);
+          }
+        }
+         else if (quantitativeStack.size >= 2) {
+          var lastTwo = takeLast(quantitativeStack, 2);
+          var lhs = lastTwo.get_za3lpa$(0);
+          var rhs = lastTwo.get_za3lpa$(1);
+          try {
+            tmp$ = this.applyOperation_0(incomingToken.operator, lhs, rhs);
+          }
+           catch (e) {
+            if (Kotlin.isType(e, Throwable)) {
+              console.error(e);
+              tmp$ = null;
+            }
+             else
+              throw e;
+          }
+          var resultOperand_0 = tmp$;
+          if (resultOperand_0 != null) {
+            tmp$_1 = plus(dropLast(quantitativeStack, 2), resultOperand_0);
+          }
+           else {
+            tmp$_1 = quantitativeStack;
+          }
+        }
+         else {
+          if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, 'in')) {
+            var theQuantityThatWillBeConverted = lastOrNull(quantitativeStack);
+            if (lastUnit_0 != null && Kotlin.isType(theQuantityThatWillBeConverted, Operand$Quantity)) {
+              try {
+                tmp$_0 = theQuantityThatWillBeConverted.quantity.to(lastUnit_0);
+              }
+               catch (e) {
+                if (Kotlin.isType(e, Throwable)) {
+                  tmp$_0 = null;
+                }
+                 else
+                  throw e;
+              }
+              var convertedQuantity = tmp$_0;
+              if (convertedQuantity != null) {
+                tmp$_1 = plus(dropLast(quantitativeStack, 1), new Operand$Quantity(convertedQuantity, theQuantityThatWillBeConverted.type));
+              }
+               else {
+                tmp$_1 = quantitativeStack;
+              }
+            }
+             else {
+              tmp$_1 = quantitativeStack;
+            }
+          }
+           else {
+            tmp$_1 = quantitativeStack;
+          }
+        }
+      }
+     else if (Kotlin.isType(incomingToken, Token$StringLiteral))
+      tmp$_1 = quantitativeStack;
+    else
+      tmp$_1 = Kotlin.noWhenBranchMatched();
+    var modifiedQuantitativeStack = tmp$_1;
+    return this.processPostfixNotationStackRec_oxe9kf$(modifiedQuantitativeStack, drop(tokens, 1), lastUnit_0, variables, functions);
+  };
+  TokenListEvaulator.prototype.processPostfixNotationStack_h27eq8$ = function (tokens, variables, functions) {
+    var quantitativeStack = this.processPostfixNotationStackRec_oxe9kf$.call(this, Kotlin.kotlin.collections.emptyList_287e2$(), tokens, null, variables, functions);
+    return lastOrNull(quantitativeStack);
+  };
+  TokenListEvaulator.prototype.addUnitToTheTopOfStackEntry_0 = function (targetNumber, token) {
+    var number = targetNumber.num;
+    var newQuantityWithUnit = math.unit(number + ' ' + token.unitName);
+    return new Operand$Quantity(newQuantityWithUnit, targetNumber.type);
+  };
+  TokenListEvaulator.prototype.applyOperation_0 = function (operator, lhs, rhs) {
+    var tmp$;
+    try {
+      if (Kotlin.equals(operator, 'as a % of'))
+        tmp$ = this.asAPercentOfOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, 'on what is'))
+        tmp$ = this.onWhatIsOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, 'of what is'))
+        tmp$ = this.ofWhatIsOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, 'off what is'))
+        tmp$ = this.offWhatIsOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, '*'))
+        tmp$ = this.multiplyOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, '/'))
+        tmp$ = this.divideOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, '+'))
+        tmp$ = this.plusOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, '-'))
+        tmp$ = this.minusOperator_0(lhs, rhs);
+      else if (Kotlin.equals(operator, '^'))
+        tmp$ = this.powerOperator_0(lhs, rhs);
+      else
+        tmp$ = null;
+    }
+     catch (e) {
+      if (Kotlin.isType(e, Throwable)) {
+        console.error(lhs.asString() + operator + rhs.asString());
+        console.error(e);
+        tmp$ = null;
+      }
+       else
+        throw e;
+    }
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.powerOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Number(Math.pow(Kotlin.numberToDouble(lhs.num), Kotlin.numberToDouble(rhs.num)), lhs.type);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Quantity)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Quantity(pow(lhs.quantity, Kotlin.numberToDouble(rhs.num)), lhs.type);
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Percentage))
+      tmp$ = null;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.minusOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = this.subtractNumbers_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage)) {
+        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
+        tmp$ = new Operand$Number(Kotlin.numberToDouble(lhs.num) - xPercentOfLeftHandSide, lhs.type);
+      }
+       else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Quantity)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = this.subtractQuantities_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Percentage))
+      tmp$ = null;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.plusOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = this.addNumbers_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage)) {
+        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
+        tmp$ = new Operand$Number(Kotlin.numberToDouble(lhs.num) + xPercentOfLeftHandSide, lhs.type);
+      }
+       else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Quantity)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = this.addQuantities_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = new Operand$Percentage(Kotlin.numberToDouble(lhs.num) + Kotlin.numberToDouble(rhs.num), lhs.type);
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.divideOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = this.divideNumbers_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = new Operand$Quantity(math.eval(lhs.num + ' / ' + rhs.quantity), NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Percentage)) {
+        var x = Kotlin.numberToDouble(lhs.num) / Kotlin.numberToDouble(rhs.num) * 100;
+        tmp$ = new Operand$Number(x, lhs.type);
+      }
+       else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Quantity)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = this.divideQuantities_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Percentage))
+      tmp$ = null;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.multiplyOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = this.multiplyNumbers_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = new Operand$Quantity(math.eval(lhs.num + ' * ' + rhs.quantity), NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Percentage)) {
+        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
+        tmp$ = new Operand$Number(xPercentOfLeftHandSide, lhs.type);
+      }
+       else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Quantity)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = this.multiplyQuantities_0(lhs, rhs);
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Percentage))
+      tmp$ = null;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.asAPercentOfOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Percentage(Kotlin.numberToDouble(lhs.num) / Kotlin.numberToDouble(rhs.num) * 100, NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Quantity)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = new Operand$Percentage(lhs.toRawNumber() / rhs.toRawNumber() * 100, NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else if (Kotlin.isType(lhs, Operand$Percentage))
+      tmp$ = null;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.onWhatIsOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number))
+      tmp$ = null;
+    else if (Kotlin.isType(lhs, Operand$Quantity))
+      tmp$ = null;
+    else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Number(Kotlin.numberToDouble(rhs.num) / (1 + Kotlin.numberToDouble(lhs.num) / 100), NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.ofWhatIsOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number))
+      tmp$ = null;
+    else if (Kotlin.isType(lhs, Operand$Quantity))
+      tmp$ = null;
+    else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Number(Kotlin.numberToDouble(rhs.num) / (Kotlin.numberToDouble(lhs.num) / 100), NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.offWhatIsOperator_0 = function (lhs, rhs) {
+    var tmp$;
+    if (Kotlin.isType(lhs, Operand$Number))
+      tmp$ = null;
+    else if (Kotlin.isType(lhs, Operand$Quantity))
+      tmp$ = null;
+    else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Number(Kotlin.numberToDouble(rhs.num) / (1 - Kotlin.numberToDouble(lhs.num) / 100), NumberType$Float_getInstance());
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.multiplyQuantities_0 = function (lhs, rhs) {
+    var tmp$, tmp$_0;
+    var result = multiply(lhs.quantity, rhs.quantity);
+    if (Kotlin.equals(typeof result, 'number')) {
+      tmp$_0 = new Operand$Number(Kotlin.isNumber(tmp$ = result) ? tmp$ : Kotlin.throwCCE(), lhs.type);
+    }
+     else {
+      tmp$_0 = new Operand$Quantity(result, lhs.type);
+    }
+    return tmp$_0;
+  };
+  TokenListEvaulator.prototype.multiplyNumbers_0 = function (lhs, rhs) {
+    return new Operand$Number(Kotlin.numberToDouble(lhs.num) * Kotlin.numberToDouble(rhs.num), lhs.type);
+  };
+  TokenListEvaulator.prototype.addNumbers_0 = function (lhs, rhs) {
+    return new Operand$Number(Kotlin.numberToDouble(lhs.num) + Kotlin.numberToDouble(rhs.num), lhs.type);
+  };
+  TokenListEvaulator.prototype.subtractNumbers_0 = function (lhs, rhs) {
+    return new Operand$Number(Kotlin.numberToDouble(lhs.num) - Kotlin.numberToDouble(rhs.num), lhs.type);
+  };
+  TokenListEvaulator.prototype.divideQuantities_0 = function (lhs, rhs) {
+    var tmp$, tmp$_0;
+    var result = divide(lhs.quantity, rhs.quantity);
+    if (Kotlin.equals(typeof result, 'number')) {
+      tmp$_0 = new Operand$Number(Kotlin.isNumber(tmp$ = result) ? tmp$ : Kotlin.throwCCE(), lhs.type);
+    }
+     else {
+      tmp$_0 = new Operand$Quantity(result, lhs.type);
+    }
+    return tmp$_0;
+  };
+  TokenListEvaulator.prototype.addQuantities_0 = function (lhs, rhs) {
+    return new Operand$Quantity(add(lhs.quantity, rhs.quantity), lhs.type);
+  };
+  TokenListEvaulator.prototype.subtractQuantities_0 = function (lhs, rhs) {
+    return new Operand$Quantity(subtract(lhs.quantity, rhs.quantity), lhs.type);
+  };
+  TokenListEvaulator.prototype.divideNumbers_0 = function (lhs, rhs) {
+    return new Operand$Number(Kotlin.numberToDouble(lhs.num) / Kotlin.numberToDouble(rhs.num), lhs.type);
+  };
+  TokenListEvaulator.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'TokenListEvaulator',
+    interfaces: []
+  };
+  function TokenListSimplifier() {
+  }
+  TokenListSimplifier.prototype.mergeCompoundUnitsAndUnaryMinusOperators_0 = function (tokens) {
+    var tmp$;
+    var restTokens = tokens;
+    var output = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
+    var prevToken = new Token$StringLiteral('');
+    var codeSmell = false;
+    while (!restTokens.isEmpty()) {
+      var token = first(restTokens);
+      if (Kotlin.isType(token, Token$NumberLiteral)) {
+        output.add_11rb$(token);
+        tmp$ = drop(restTokens, 1);
+      }
+       else if (Kotlin.isType(token, Token$Variable)) {
+        output.add_11rb$(token);
+        tmp$ = drop(restTokens, 1);
+      }
+       else if (Kotlin.isType(token, Token$StringLiteral)) {
+        output.add_11rb$(token);
+        tmp$ = drop(restTokens, 1);
+      }
+       else if (Kotlin.isType(token, Token$Operator)) {
+        output.add_11rb$(token);
+        tmp$ = drop(restTokens, 1);
+      }
+       else if (Kotlin.isType(token, Token$UnitOfMeasure)) {
+        if (Kotlin.isType(prevToken, Token$Operator) || Kotlin.isType(prevToken, Token$StringLiteral) || Kotlin.isType(prevToken, Token$NumberLiteral) || Kotlin.isType(prevToken, Token$Variable)) {
+          var compundUnitResult = this.parseCompundUnit_0(restTokens);
+          if (compundUnitResult != null) {
+            var tokenCountInThisUnit = compundUnitResult.tokens.size;
+            restTokens = drop(restTokens, tokenCountInThisUnit);
+            output.add_11rb$(compundUnitResult);
+            codeSmell = true;
+          }
+        }
+        if (codeSmell) {
+          tmp$ = restTokens;
+        }
+         else {
+          output.add_11rb$(token);
+          tmp$ = drop(restTokens, 1);
+        }
+      }
+       else
+        tmp$ = Kotlin.noWhenBranchMatched();
+      restTokens = tmp$;
+      prevToken = token;
+      codeSmell = false;
+    }
+    return output;
+  };
+  TokenListSimplifier.prototype.parseCompundUnit_0 = function (tokens) {
+    if (tokens.size <= 1) {
+      return null;
+    }
+    var prevToken = {v: new Token$StringLiteral('')};
+    var tmp$;
+    var list = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
+    tmp$ = tokens.iterator();
+    while (tmp$.hasNext()) {
+      var item = tmp$.next();
+      var tmp$_0, tmp$_1;
+      if (Kotlin.isType(item, Token$Operator))
+        tmp$_1 = contains_1(['*', '/', '^', '(', ')'], item.operator);
+      else if (Kotlin.isType(item, Token$NumberLiteral))
+        tmp$_1 = (Kotlin.isType(prevToken.v, Token$Operator) && Kotlin.equals((Kotlin.isType(tmp$_0 = prevToken.v, Token$Operator) ? tmp$_0 : Kotlin.throwCCE()).operator, '^'));
+      else if (Kotlin.isType(item, Token$UnitOfMeasure))
+        tmp$_1 = true;
+      else
+        tmp$_1 = false;
+      var result = tmp$_1;
+      prevToken.v = item;
+      if (!result) {
+        break;
+      }
+      list.add_11rb$(item);
+    }
+    var tokensThatTogetherMayFormACompundUnit = list;
+    if (!tokensThatTogetherMayFormACompundUnit.isEmpty()) {
+      var maybeCompoundUnit = this.tryFindCorrectCompoundUnit_0(tokensThatTogetherMayFormACompundUnit);
+      return maybeCompoundUnit;
+    }
+    return null;
+  };
+  TokenListSimplifier.prototype.tryFindCorrectCompoundUnit_0 = function (tokenGroup) {
+    var expressionString = joinToString(tokenGroup, '', void 0, void 0, void 0, void 0, Kotlin.getCallableRef('asString', function ($receiver) {
+      return $receiver.asString();
+    }));
+    try {
+      var compundUnit = math.unit('1 ' + expressionString);
+      var compundUnitname = replace(drop_0(compundUnit.toString(), '1 '.length), ' ', '');
+      if (!Kotlin.equals(compundUnitname, expressionString)) {
+        return null;
+      }
+      return new Token$UnitOfMeasure(compundUnitname, tokenGroup);
+    }
+     catch (e) {
+      if (Kotlin.isType(e, Throwable)) {
+        return this.tryFindCorrectCompoundUnit_0(dropLast(tokenGroup, 1));
+      }
+       else
+        throw e;
+    }
+  };
+  TokenListSimplifier.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'TokenListSimplifier',
+    interfaces: []
+  };
+  function TokenParser() {
+  }
+  function TokenParser$parse$lambda(closure$variableNames) {
+    return function (str_0) {
+      return tryParseVariableName(str_0, closure$variableNames);
+    };
+  }
+  function TokenParser$parse$lambda_0(closure$functionNames) {
+    return function (str_0) {
+      return tryParseFunctionInvocation(str_0, closure$functionNames);
+    };
+  }
+  TokenParser.prototype.parse_0 = function (text_0, variableNames, functionNames) {
+    if (variableNames === void 0)
+      variableNames = emptyList();
+    if (functionNames === void 0)
+      functionNames = emptyList();
+    var tmp$, tmp$_0;
+    var tokens = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
+    var tmp$_1;
+    var str_0 = {v: Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_1 = text_0) ? tmp$_1 : Kotlin.throwCCE()).toString()};
+    while (str_0.v.length > 0) {
+      var originalLength = str_0.v.length;
+      var tokenAndRest = tryExtractToken(str_0.v, [TokenParser$parse$lambda(variableNames), TokenParser$parse$lambda_0(functionNames), Kotlin.getCallableRef('tryExtractOperator', function (str_1) {
+        return tryExtractOperator(str_1);
+      }), Kotlin.getCallableRef('tryExtractNumberLiteral', function (str_1) {
+        return tryExtractNumberLiteral(str_1);
+      }), Kotlin.getCallableRef('tryExtractUnit', function (str_1) {
+        return tryExtractUnit(str_1);
+      }), Kotlin.getCallableRef('tryExtractStringLiteral', function (str_1) {
+        return tryExtractStringLiteral(str_1);
+      })]);
+      if (tokenAndRest != null) {
+        var $receiver = tokenAndRest.second;
+        var tmp$_2;
+        str_0.v = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_2 = $receiver) ? tmp$_2 : Kotlin.throwCCE()).toString();
+      }
+       else {
+        break;
+      }
+      var token = tokenAndRest.first;
+      var prevToken = lastOrNull(tokens);
+      if (Kotlin.isType(prevToken, Token$NumberLiteral) && Kotlin.isType(token, Token$StringLiteral) && token.str.length === 1 && contains_2('kM', Kotlin.unboxChar(first_0(token.str)))) {
+        tmp$ = token.str;
+        if (Kotlin.equals(tmp$, 'k'))
+          tmp$_0 = Kotlin.numberToDouble(prevToken.num) * 1000;
+        else if (Kotlin.equals(tmp$, 'M'))
+          tmp$_0 = Kotlin.numberToDouble(prevToken.num) * 1000000;
+        else {
+          var message = "can't happen";
+          throw new Kotlin.kotlin.IllegalStateException(message.toString());
+        }
+        var newNumber = tmp$_0;
+        var newStringRepresentation = prevToken.originalStringRepresentation + token.str;
+        tokens.removeAt_za3lpa$(get_lastIndex(tokens));
+        tokens.add_11rb$(new Token$NumberLiteral(newNumber, newStringRepresentation, prevToken.type));
+      }
+       else {
+        tokens.add_11rb$(token);
+      }
+      if (!(str_0.v.length < originalLength)) {
+        var message_0 = str_0.v + ': The length of the processing string must be shorter at the end of the block! ' + originalLength;
+        throw new Kotlin.kotlin.IllegalArgumentException(message_0.toString());
+      }
+    }
+    return tokens;
+  };
+  TokenParser.$metadata$ = {
+    kind: Kotlin.Kind.CLASS,
+    simpleName: 'TokenParser',
+    interfaces: []
+  };
+  function tryExtractToken(str_0, tokenRecognizers) {
     var tmp$;
     for (tmp$ = 0; tmp$ !== tokenRecognizers.length; ++tmp$) {
       var element = tokenRecognizers[tmp$];
-      var tokenAndRest = element(str);
+      var tokenAndRest = element(str_0);
       if (tokenAndRest != null) {
         return tokenAndRest;
       }
     }
     return null;
   }
-  function tryExtractNumberLiteral(str) {
+  function tryExtractNumberLiteral(str_0) {
     var tmp$;
-    if (startsWith_0(str, '0b')) {
-      var $receiver = drop(str, 2);
+    if (startsWith_0(str_0, '0b')) {
+      var $receiver = drop_0(str_0, 2);
       var takeWhile$result;
       takeWhile$break: {
         var tmp$_0;
@@ -2405,13 +2448,13 @@ var NoteCalcJS = function (_, Kotlin) {
         tmp$ = null;
       }
        else {
-        var num = toInt_0(replace(numStr, ' ', ''), 2);
-        var rest = drop(str, 2 + numStr.length | 0);
-        tmp$ = to(new Token$NumberLiteral(num, '0b' + numStr, NumberType$Int_getInstance()), rest);
+        var num_1 = toInt_0(replace(numStr, ' ', ''), 2);
+        var rest = drop_0(str_0, 2 + numStr.length | 0);
+        tmp$ = to(new Token$NumberLiteral(num_1, '0b' + numStr, NumberType$Int_getInstance()), rest);
       }
     }
-     else if (startsWith_0(str, '0x')) {
-      var $receiver_0 = drop(str, 2);
+     else if (startsWith_0(str_0, '0x')) {
+      var $receiver_0 = drop_0(str_0, 2);
       var takeWhile$result_0;
       takeWhile$break_0: {
         var tmp$_1;
@@ -2429,25 +2472,25 @@ var NoteCalcJS = function (_, Kotlin) {
         tmp$ = null;
       }
        else {
-        var num_0 = toInt_0(replace(numStr_0, ' ', ''), 16);
-        var rest_0 = drop(str, 2 + numStr_0.length | 0);
-        tmp$ = to(new Token$NumberLiteral(num_0, '0x' + numStr_0, NumberType$Int_getInstance()), rest_0);
+        var num_2 = toInt_0(replace(numStr_0, ' ', ''), 16);
+        var rest_0 = drop_0(str_0, 2 + numStr_0.length | 0);
+        tmp$ = to(new Token$NumberLiteral(num_2, '0x' + numStr_0, NumberType$Int_getInstance()), rest_0);
       }
     }
      else {
-      var c = Kotlin.toBoxedChar(first_0(str));
+      var c = Kotlin.toBoxedChar(first_0(str_0));
       if (contains_2('0123456789', Kotlin.unboxChar(c)) || Kotlin.unboxChar(c) === 46) {
         var takeWhile$result_1;
         takeWhile$break_1: {
           var tmp$_2;
-          tmp$_2 = str.length - 1 | 0;
+          tmp$_2 = str_0.length - 1 | 0;
           for (var index_1 = 0; index_1 <= tmp$_2; index_1++) {
-            if (!contains_2(' 0123456789.', Kotlin.unboxChar(Kotlin.toBoxedChar(str.charCodeAt(index_1))))) {
-              takeWhile$result_1 = str.substring(0, index_1);
+            if (!contains_2(' 0123456789.', Kotlin.unboxChar(Kotlin.toBoxedChar(str_0.charCodeAt(index_1))))) {
+              takeWhile$result_1 = str_0.substring(0, index_1);
               break takeWhile$break_1;
             }
           }
-          takeWhile$result_1 = str;
+          takeWhile$result_1 = str_0;
         }
         var numStr_1 = takeWhile$result_1;
         var tmp$_3;
@@ -2461,9 +2504,9 @@ var NoteCalcJS = function (_, Kotlin) {
         }
         var decimalPointCount = count_26;
         if (decimalPointCount <= 1) {
-          var num_1 = toDouble(replace(numStr_1, ' ', ''));
-          var rest_1 = drop(str, numStr_1.length);
-          tmp$ = to(new Token$NumberLiteral(num_1, numStr_1, decimalPointCount === 0 ? NumberType$Int_getInstance() : NumberType$Float_getInstance()), rest_1);
+          var num_3 = toDouble(replace(numStr_1, ' ', ''));
+          var rest_1 = drop_0(str_0, numStr_1.length);
+          tmp$ = to(new Token$NumberLiteral(num_3, numStr_1, decimalPointCount === 0 ? NumberType$Int_getInstance() : NumberType$Float_getInstance()), rest_1);
         }
          else
           tmp$ = null;
@@ -2474,30 +2517,30 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     return tmp$;
   }
-  function tryExtractOperator(str) {
+  function tryExtractOperator(str_0) {
     var tmp$;
-    if (startsWith_0(str, 'on what is')) {
-      tmp$ = to(new Token$Operator('on what is'), drop(str, 'on what is'.length));
+    if (startsWith_0(str_0, 'on what is')) {
+      tmp$ = to(new Token$Operator('on what is'), drop_0(str_0, 'on what is'.length));
     }
-     else if (startsWith_0(str, 'of what is')) {
-      tmp$ = to(new Token$Operator('of what is'), drop(str, 'of what is'.length));
+     else if (startsWith_0(str_0, 'of what is')) {
+      tmp$ = to(new Token$Operator('of what is'), drop_0(str_0, 'of what is'.length));
     }
-     else if (startsWith_0(str, 'off what is')) {
-      tmp$ = to(new Token$Operator('off what is'), drop(str, 'off what is'.length));
+     else if (startsWith_0(str_0, 'off what is')) {
+      tmp$ = to(new Token$Operator('off what is'), drop_0(str_0, 'off what is'.length));
     }
-     else if (startsWith_0(str, 'as a % of')) {
-      tmp$ = to(new Token$Operator('as a % of'), drop(str, 'as a % of'.length));
+     else if (startsWith_0(str_0, 'as a % of')) {
+      tmp$ = to(new Token$Operator('as a % of'), drop_0(str_0, 'as a % of'.length));
     }
-     else if (contains_2('=+-/%*^()&|!', Kotlin.unboxChar(first_0(str)))) {
-      tmp$ = to(new Token$Operator(String.fromCharCode(Kotlin.toBoxedChar(first_0(str)))), drop(str, 1));
+     else if (contains_2('=+-/%*^()&|!', Kotlin.unboxChar(first_0(str_0)))) {
+      tmp$ = to(new Token$Operator(String.fromCharCode(Kotlin.toBoxedChar(first_0(str_0)))), drop_0(str_0, 1));
     }
-     else if (startsWith_0(str, 'in ')) {
-      tmp$ = to(new Token$Operator('in'), drop(str, 2));
+     else if (startsWith_0(str_0, 'in ')) {
+      tmp$ = to(new Token$Operator('in'), drop_0(str_0, 2));
     }
-     else if (str.length > 1) {
-      var twoChars = str.substring(0, 2);
+     else if (str_0.length > 1) {
+      var twoChars = str_0.substring(0, 2);
       if (Kotlin.equals(twoChars, '<<') || Kotlin.equals(twoChars, '>>')) {
-        tmp$ = to(new Token$Operator(twoChars), drop(str, 2));
+        tmp$ = to(new Token$Operator(twoChars), drop_0(str_0, 2));
       }
        else {
         tmp$ = null;
@@ -2517,24 +2560,24 @@ var NoteCalcJS = function (_, Kotlin) {
   function isDigit($receiver) {
     return contains_2('0123456789', Kotlin.unboxChar($receiver));
   }
-  function tryExtractUnit(str) {
+  function tryExtractUnit(str_0) {
     var tmp$;
     var takeWhile$result;
     takeWhile$break: {
       var tmp$_0;
-      tmp$_0 = str.length - 1 | 0;
+      tmp$_0 = str_0.length - 1 | 0;
       for (var index = 0; index <= tmp$_0; index++) {
-        if (!isLetter(Kotlin.toBoxedChar(str.charCodeAt(index)))) {
-          takeWhile$result = str.substring(0, index);
+        if (!isLetter(Kotlin.toBoxedChar(str_0.charCodeAt(index)))) {
+          takeWhile$result = str_0.substring(0, index);
           break takeWhile$break;
         }
       }
-      takeWhile$result = str;
+      takeWhile$result = str_0;
     }
     var piece = takeWhile$result;
     try {
-      var unit = math.unit('1 ' + piece);
-      tmp$ = to(new Token$UnitOfMeasure(drop(unit.toString(), '1 '.length)), drop(str, piece.length));
+      var unit_0 = math.unit('1 ' + piece);
+      tmp$ = to(new Token$UnitOfMeasure(drop_0(unit_0.toString(), '1 '.length)), drop_0(str_0, piece.length));
     }
      catch (e) {
       if (Kotlin.isType(e, Throwable)) {
@@ -2545,13 +2588,13 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     return tmp$;
   }
-  function tryExtractStringLiteral(str) {
-    if (!!isWhitespace(Kotlin.unboxChar(first_0(str)))) {
+  function tryExtractStringLiteral(str_0) {
+    if (!!isWhitespace(Kotlin.unboxChar(first_0(str_0)))) {
       var message = 'At this point, str must already be trimmed!';
       throw new Kotlin.kotlin.IllegalArgumentException(message.toString());
     }
-    var tmp$ = Kotlin.unboxChar(first_0(str));
-    var $receiver = drop(str, 1);
+    var tmp$ = Kotlin.unboxChar(first_0(str_0));
+    var $receiver = drop_0(str_0, 1);
     var takeWhile$result;
     takeWhile$break: {
       var tmp$_0;
@@ -2567,11 +2610,11 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     var other = takeWhile$result;
     var extractedStr = String.fromCharCode(Kotlin.toBoxedChar(tmp$)) + other;
-    return to(new Token$StringLiteral(extractedStr), drop(str, extractedStr.length));
+    return to(new Token$StringLiteral(extractedStr), drop_0(str_0, extractedStr.length));
   }
-  function tryParseVariableName(str, variableNames) {
+  function tryParseVariableName(str_0, variableNames) {
     var tmp$;
-    if (!!isWhitespace(Kotlin.unboxChar(first_0(str)))) {
+    if (!!isWhitespace(Kotlin.unboxChar(first_0(str_0)))) {
       var message = 'At this point, str must already be trimmed!';
       throw new Kotlin.kotlin.IllegalArgumentException(message.toString());
     }
@@ -2581,7 +2624,7 @@ var NoteCalcJS = function (_, Kotlin) {
       tmp$_0 = variableNames.iterator();
       while (tmp$_0.hasNext()) {
         var element = tmp$_0.next();
-        if (startsWith_0(str, element)) {
+        if (startsWith_0(str_0, element)) {
           firstOrNull$result = element;
           break firstOrNull$break;
         }
@@ -2590,16 +2633,16 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     var variableName = firstOrNull$result;
     if (variableName != null) {
-      tmp$ = to(new Token$Variable(variableName), drop(str, variableName.length));
+      tmp$ = to(new Token$Variable(variableName), drop_0(str_0, variableName.length));
     }
      else {
       tmp$ = null;
     }
     return tmp$;
   }
-  function tryParseFunctionInvocation(str, functionNames) {
+  function tryParseFunctionInvocation(str_0, functionNames) {
     var tmp$;
-    if (!!isWhitespace(Kotlin.unboxChar(first_0(str)))) {
+    if (!!isWhitespace(Kotlin.unboxChar(first_0(str_0)))) {
       var message = 'At this point, str must already be trimmed!';
       throw new Kotlin.kotlin.IllegalArgumentException(message.toString());
     }
@@ -2609,7 +2652,7 @@ var NoteCalcJS = function (_, Kotlin) {
       tmp$_0 = functionNames.iterator();
       while (tmp$_0.hasNext()) {
         var element = tmp$_0.next();
-        if (startsWith_0(str, element)) {
+        if (startsWith_0(str_0, element)) {
           firstOrNull$result = element;
           break firstOrNull$break;
         }
@@ -2618,7 +2661,7 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     var functionName = firstOrNull$result;
     if (functionName != null) {
-      tmp$ = to(new Token$StringLiteral(functionName), drop(str, functionName.length));
+      tmp$ = to(new Token$StringLiteral(functionName), drop_0(str_0, functionName.length));
     }
      else {
       tmp$ = null;
@@ -2631,40 +2674,10 @@ var NoteCalcJS = function (_, Kotlin) {
   Object.defineProperty(package$notecalc, 'CodeMirrorWrapper', {
     get: CodeMirrorWrapper_getInstance
   });
-  Object.defineProperty(package$notecalc, 'nextNoteCalcIndex', {
-    get: function () {
-      return nextNoteCalcIndex;
-    },
-    set: function (value) {
-      nextNoteCalcIndex = value;
-    }
-  });
-  Object.defineProperty(package$notecalc, 'globalVariables', {
-    get: function () {
-      return globalVariables;
-    }
-  });
-  Object.defineProperty(package$notecalc, 'NOTE_CALC_IDS_KEY', {
-    get: function () {
-      return NOTE_CALC_IDS_KEY;
-    }
-  });
-  Object.defineProperty(package$notecalc, 'UNNAMED_TITLE', {
-    get: function () {
-      return UNNAMED_TITLE;
-    }
-  });
+  LineParser.ShuntingYardStacks = LineParser$ShuntingYardStacks;
+  LineParser.OperatorInfo = LineParser$OperatorInfo;
+  package$notecalc.LineParser = LineParser;
   package$notecalc.main_kand9s$ = main;
-  Object.defineProperty(package$notecalc, 'addButtonClicked', {
-    get: function () {
-      return addButtonClicked;
-    }
-  });
-  Object.defineProperty(package$notecalc, 'defaultText', {
-    get: function () {
-      return defaultText;
-    }
-  });
   package$notecalc.add_uwdaz7$ = add;
   package$notecalc.subtract_uwdaz7$ = subtract;
   package$notecalc.multiply_uwdaz7$ = multiply;
@@ -2672,8 +2685,6 @@ var NoteCalcJS = function (_, Kotlin) {
   package$notecalc.pow_uwdaz7$ = pow;
   package$notecalc.abs_7pybaq$ = abs;
   package$notecalc.sqrt_7pybaq$ = sqrt;
-  NoteCalcEditor$Companion.prototype.OperatorInfo = NoteCalcEditor$Companion$OperatorInfo;
-  NoteCalcEditor$Companion.prototype.ShuntingYardStacks = NoteCalcEditor$Companion$ShuntingYardStacks;
   NoteCalcEditor$Companion.prototype.HighlightedText = NoteCalcEditor$Companion$HighlightedText;
   NoteCalcEditor$Companion.prototype.LineAndTokens = NoteCalcEditor$Companion$LineAndTokens;
   NoteCalcEditor$Companion.prototype.FunctionDefinition = NoteCalcEditor$Companion$FunctionDefinition;
@@ -2688,6 +2699,7 @@ var NoteCalcJS = function (_, Kotlin) {
     get: NumberType$Int_getInstance
   });
   package$notecalc.NumberType = NumberType;
+  package$notecalc.NoteCalcEditorTest = NoteCalcEditorTest;
   Operand.Percentage = Operand$Percentage;
   Operand.Number = Operand$Number;
   Operand.Quantity = Operand$Quantity;
@@ -2698,10 +2710,9 @@ var NoteCalcJS = function (_, Kotlin) {
   Token.NumberLiteral = Token$NumberLiteral;
   Token.Operator = Token$Operator;
   package$notecalc.Token = Token;
-  package$notecalc.tryExtractToken_4i35ca$ = tryExtractToken;
-  package$notecalc.tryExtractNumberLiteral_61zpoe$ = tryExtractNumberLiteral;
-  package$notecalc.isLetter_myv2d0$ = isLetter;
-  package$notecalc.isDigit_myv2d0$ = isDigit;
+  package$notecalc.TokenListEvaulator = TokenListEvaulator;
+  package$notecalc.TokenListSimplifier = TokenListSimplifier;
+  package$notecalc.TokenParser = TokenParser;
   nextNoteCalcIndex = 0;
   globalVariables = Kotlin.kotlin.collections.HashMap_init_q3lmfv$();
   NOTE_CALC_IDS_KEY = 'commaSeparatedNoteCaclcIds';

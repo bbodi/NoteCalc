@@ -7,19 +7,19 @@ import kotlin.browser.localStorage
 import kotlin.browser.window
 
 
-external class Assert {
+internal external class Assert {
     fun ok(expr: Boolean, msg: String)
     fun <T> equal(actual: T, expected: T)
 }
 
-external object QUnit {
+internal external object QUnit {
     fun test(name: String, testFunc: (Assert) -> Unit)
 }
 
-var nextNoteCalcIndex = 0
-val globalVariables = hashMapOf<String, Operand>()
-const val NOTE_CALC_IDS_KEY: String = "commaSeparatedNoteCaclcIds"
-const val UNNAMED_TITLE: String = "Unnamed"
+private var nextNoteCalcIndex = 0
+private val globalVariables = hashMapOf<String, Operand>()
+private const val NOTE_CALC_IDS_KEY: String = "commaSeparatedNoteCaclcIds"
+private const val UNNAMED_TITLE: String = "Unnamed"
 
 
 fun main(args: Array<String>) {
@@ -66,7 +66,7 @@ private fun createNoteCalcEditors(allNoteCalcEntries: List<Int>) {
     }
 }
 
-val addButtonClicked = {
+private val addButtonClicked = {
     val allNoteCalcEntries = localStorage.getAllNoteCalcEntries()
     localStorage.setItem(NOTE_CALC_IDS_KEY, (allNoteCalcEntries + nextNoteCalcIndex).joinToString(","))
     localStorage.setNoteCalcTitle(nextNoteCalcIndex, loadTitleOr(nextNoteCalcIndex, UNNAMED_TITLE))
@@ -158,7 +158,7 @@ private fun noteCalcTitleKey(editorIndex: Int): String = "storedNoteCalcTitle$ed
 
 private fun noteCaclcVisibleKey(editorIndex: Int): String = "storedNoteCalcVisible$editorIndex"
 
-const val defaultText: String = """==========================================================
+private const val defaultText: String = """==========================================================
 ========================== Welcome =======================
 ==========================================================
 
