@@ -5,11 +5,13 @@ class TokenParser {
     internal fun parse(text: String, variableNames: Iterable<String> = emptyList(), functionNames: Iterable<String> = emptyList()): List<Token> {
         val tokens = arrayListOf<Token>()
         var str = text.trim()
+        val sortedVariableNames = variableNames.sortedByDescending { it.length }
+        val sortedFunctionNames = functionNames.sortedByDescending { it.length }
         while (str.isNotEmpty()) {
             val originalLength = str.length
             val tokenAndRest = tryExtractToken(str,
-                    { str -> tryParseVariableName(str, variableNames) },
-                    { str -> tryParseFunctionInvocation(str, functionNames) },
+                    { str -> tryParseFunctionInvocation(str, sortedFunctionNames) },
+                    { str -> tryParseVariableName(str, sortedVariableNames) },
                     ::tryExtractOperator,
                     ::tryExtractNumberLiteral,
                     ::tryExtractUnit,

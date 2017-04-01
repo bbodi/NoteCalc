@@ -8,8 +8,8 @@ import kotlin.browser.window
 
 
 internal external class Assert {
-    fun ok(expr: Boolean, msg: String)
-    fun <T> equal(actual: T, expected: T)
+    fun ok(expr: Boolean, msg: String = definedExternally)
+    fun <T> equal(actual: T, expected: T, msg: String = definedExternally)
 }
 
 internal external object QUnit {

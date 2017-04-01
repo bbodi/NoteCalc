@@ -126,6 +126,17 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(1000), "3k - 2k")
         assertEq(Operand.Number(1000000), "3M - 2M")
         assertEq(Operand.Number(100), "1GB / 10MB")
+
+        QUnit.test("The parser must find the longest variable name.") { assert ->
+            val result = LineParser().parseProcessAndEvaulate(emptyList(), "ab", listOf("a", "ab"))!!
+            assert.equal(result.parsedTokens.size, 1, "The parser must find the longest variable name 'ab' instead of 'a'")
+            assert.equal(result.parsedTokens.first().asString(), "ab")
+        }
+        QUnit.test("The parser must find the longest function name.") { assert ->
+            val result = LineParser().parseProcessAndEvaulate(listOf("a", "ab"), "ab()", emptyList())!!
+            assert.equal(result.parsedTokens.first().asString(), "ab")
+        }
+
     }
 
     private fun assertEq(expectedValue: String, actualInput: String) {
