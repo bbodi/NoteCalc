@@ -36,6 +36,7 @@ var NoteCalcJS = function (_, Kotlin) {
   var getOrNull = Kotlin.kotlin.collections.getOrNull_yzln2o$;
   var split_0 = Kotlin.kotlin.text.split_ip8yn$;
   var Enum = Kotlin.kotlin.Enum;
+  var listOf_0 = Kotlin.kotlin.collections.listOf_i5x0yv$;
   var emptyMap = Kotlin.kotlin.collections.emptyMap_q3lmfv$;
   var zip = Kotlin.kotlin.collections.zip_evp5ax$;
   var zip_0 = Kotlin.kotlin.collections.zip_45mdf7$;
@@ -1220,7 +1221,7 @@ var NoteCalcJS = function (_, Kotlin) {
       return stream.skipToEnd();
     }
      else {
-      if (stream.peek() == Kotlin.toBoxedChar(32) || stream.peek() == Kotlin.toBoxedChar(9)) {
+      if (stream.peek() == ' ' || stream.peek() == '\t') {
         stream.eatSpace();
         return 'space';
       }
@@ -1328,6 +1329,17 @@ var NoteCalcJS = function (_, Kotlin) {
   function NoteCalcEditorTest$runTests$unit(n) {
     return new Token$UnitOfMeasure(n);
   }
+  function NoteCalcEditorTest$runTests$lambda(assert) {
+    var tmp$;
+    var result = (tmp$ = (new LineParser()).parseProcessAndEvaulate_0(emptyList(), 'ab', listOf_0(['a', 'ab']))) != null ? tmp$ : Kotlin.throwNPE();
+    assert.equal(result.parsedTokens.size, 1, "The parser must find the longest variable name 'ab' instead of 'a'");
+    assert.equal(first(result.parsedTokens).asString(), 'ab');
+  }
+  function NoteCalcEditorTest$runTests$lambda_0(assert) {
+    var tmp$;
+    var result = (tmp$ = (new LineParser()).parseProcessAndEvaulate_0(listOf_0(['a', 'ab']), 'ab()', emptyList())) != null ? tmp$ : Kotlin.throwNPE();
+    assert.equal(first(result.parsedTokens).asString(), 'ab');
+  }
   NoteCalcEditorTest.prototype.runTests = function () {
     var num = NoteCalcEditorTest$runTests$num;
     var num_0 = NoteCalcEditorTest$runTests$num_0;
@@ -1377,6 +1389,8 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(1000), '3k - 2k');
     this.assertEq_1(new Operand$Number(1000000), '3M - 2M');
     this.assertEq_1(new Operand$Number(100), '1GB / 10MB');
+    QUnit.test('The parser must find the longest variable name.', NoteCalcEditorTest$runTests$lambda);
+    QUnit.test('The parser must find the longest function name.', NoteCalcEditorTest$runTests$lambda_0);
   };
   function NoteCalcEditorTest$assertEq$lambda(this$NoteCalcEditorTest, closure$actualInput, closure$expectedValue) {
     return function (assert) {
@@ -2346,14 +2360,20 @@ var NoteCalcJS = function (_, Kotlin) {
   };
   function TokenParser() {
   }
-  function TokenParser$parse$lambda(closure$variableNames) {
+  function TokenParser$parse$lambda(it) {
+    return it.length;
+  }
+  function TokenParser$parse$lambda_0(it) {
+    return it.length;
+  }
+  function TokenParser$parse$lambda_1(closure$sortedFunctionNames) {
     return function (str_0) {
-      return tryParseVariableName(str_0, closure$variableNames);
+      return tryParseFunctionInvocation(str_0, closure$sortedFunctionNames);
     };
   }
-  function TokenParser$parse$lambda_0(closure$functionNames) {
+  function TokenParser$parse$lambda_2(closure$sortedVariableNames) {
     return function (str_0) {
-      return tryParseFunctionInvocation(str_0, closure$functionNames);
+      return tryParseVariableName(str_0, closure$sortedVariableNames);
     };
   }
   TokenParser.prototype.parse_0 = function (text_0, variableNames, functionNames) {
@@ -2365,9 +2385,13 @@ var NoteCalcJS = function (_, Kotlin) {
     var tokens = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
     var tmp$_1;
     var str_0 = {v: Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_1 = text_0) ? tmp$_1 : Kotlin.throwCCE()).toString()};
+    var $receiver = variableNames;
+    var sortedVariableNames = Kotlin.kotlin.collections.sortedWith_eknfly$($receiver, new Kotlin.kotlin.comparisons.compareByDescending$f(TokenParser$parse$lambda));
+    var $receiver_0 = functionNames;
+    var sortedFunctionNames = Kotlin.kotlin.collections.sortedWith_eknfly$($receiver_0, new Kotlin.kotlin.comparisons.compareByDescending$f(TokenParser$parse$lambda_0));
     while (str_0.v.length > 0) {
       var originalLength = str_0.v.length;
-      var tokenAndRest = tryExtractToken(str_0.v, [TokenParser$parse$lambda(variableNames), TokenParser$parse$lambda_0(functionNames), Kotlin.getCallableRef('tryExtractOperator', function (str_1) {
+      var tokenAndRest = tryExtractToken(str_0.v, [TokenParser$parse$lambda_1(sortedFunctionNames), TokenParser$parse$lambda_2(sortedVariableNames), Kotlin.getCallableRef('tryExtractOperator', function (str_1) {
         return tryExtractOperator(str_1);
       }), Kotlin.getCallableRef('tryExtractNumberLiteral', function (str_1) {
         return tryExtractNumberLiteral(str_1);
@@ -2377,9 +2401,9 @@ var NoteCalcJS = function (_, Kotlin) {
         return tryExtractStringLiteral(str_1);
       })]);
       if (tokenAndRest != null) {
-        var $receiver = tokenAndRest.second;
+        var $receiver_1 = tokenAndRest.second;
         var tmp$_2;
-        str_0.v = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_2 = $receiver) ? tmp$_2 : Kotlin.throwCCE()).toString();
+        str_0.v = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_2 = $receiver_1) ? tmp$_2 : Kotlin.throwCCE()).toString();
       }
        else {
         break;

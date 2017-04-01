@@ -280,7 +280,7 @@ class NoteCalcEditor(defaultValue: String,
             if (tokenToHighlight == null) {
                 stream.skipToEnd()
             } else {
-                if (stream.peek() == ' ' || stream.peek() == '\t') {
+                if (stream.peek() == js("' '") || stream.peek() == js("'\t'")) {
                     stream.eatSpace()
                     "space"
                 } else {
