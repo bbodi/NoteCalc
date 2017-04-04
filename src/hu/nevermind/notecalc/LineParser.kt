@@ -1,6 +1,8 @@
 package hu.nevermind.notecalc
 
-class LineParser() {
+const val UNARY_MINUS_TOKEN_SYMBOL: String = "unary-"
+
+class LineParser {
 
     private val tokenParser: TokenParser = TokenParser()
     private val tokenListSimplifier: TokenListSimplifier = TokenListSimplifier()
@@ -8,7 +10,7 @@ class LineParser() {
     internal fun parseProcessAndEvaulate(functionNames: Iterable<String>, line: String, variableNames: Iterable<String>): EvaulationResult? {
         return try {
             val parsedTokens = tokenParser.parse(line, variableNames, functionNames)
-            val tokensWithMergedCompoundUnits = tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(parsedTokens)
+            val tokensWithMergedCompoundUnits = tokenListSimplifier.mergeCompoundUnits(parsedTokens)
             val postFixNotationTokens = shuntingYard(tokensWithMergedCompoundUnits, functionNames)
             val highlightingInfos = createHighlightingNamesForTokens(parsedTokens)
             val lastToken = postFixNotationTokens.lastOrNull()
@@ -22,7 +24,7 @@ class LineParser() {
         val output = listOf<Token>()
         val operatorStack = listOf<Token.Operator>()
 
-        val (newOperatorStack, newOutput) = shuntingYardRec(inputTokens, operatorStack, output, functionNames)
+        val (newOperatorStack, newOutput) = shuntingYardRec(inputTokens, operatorStack, output, functionNames, null)
         return newOperatorStack.asReversed().fold(newOutput) { output, operator ->
             applyOrPutOperatorOnTheStack(operator, output)
         }
@@ -31,7 +33,8 @@ class LineParser() {
     private fun shuntingYardRec(inputTokens: List<Token>,
                                 operatorStack: List<Token.Operator>,
                                 output: List<Token>,
-                                functionNames: Iterable<String>): ShuntingYardStacks {
+                                functionNames: Iterable<String>,
+                                lastToken: Token?): ShuntingYardStacks {
         if (inputTokens.isEmpty()) {
             return ShuntingYardStacks(operatorStack, output)
         } else {
@@ -43,6 +46,17 @@ class LineParser() {
                     } else if (inputToken.operator == ")") {
                         val modifiedStacksAfterBracketRule = popAnythingUntilOpeningBracket(operatorStack, output)
                         modifiedStacksAfterBracketRule
+                    } else if (inputToken.operator == "-") {
+                        if (lastToken == null || (lastToken is Token.Operator && lastToken.operator != ")")) {
+                            ShuntingYardStacks(operatorStack + Token.Operator(UNARY_MINUS_TOKEN_SYMBOL), output)
+                        } else {
+                            val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
+                            ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
+                        }
+                    } else if (inputToken.operator == "+") {
+                        val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
+                        ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
+
                     } else {
                         val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
                         ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
@@ -64,7 +78,7 @@ class LineParser() {
                 }
                 is Token.Variable -> ShuntingYardStacks(operatorStack, output + inputToken)
             }
-            return shuntingYardRec(inputTokens.drop(1), newOperatorStack, newOutput, functionNames)
+            return shuntingYardRec(inputTokens.drop(1), newOperatorStack, newOutput, functionNames, inputToken)
         }
     }
 
@@ -104,58 +118,59 @@ class LineParser() {
         }
     }
 
-    private fun applyOrPutOperatorOnTheStack(operator: Token.Operator, stack: List<Token>): List<Token> {
-        return if (stack.size < 2) {
-            stack + operator
-        } else {
-            val lastTwo = stack.takeLast(2)
-            val lhs = lastTwo[0]
-            val rhs = lastTwo[1]
-            val newTokenFromApplying = operatorInfosForUnits[operator.operator]?.func?.invoke(lhs, rhs)
-            if (newTokenFromApplying != null) {
-                stack.dropLast(2) + newTokenFromApplying
-            } else {
-                stack + operator
-            }
-        }
+    private fun applyOrPutOperatorOnTheStack(operator: Token.Operator, outputStack: List<Token>): List<Token> {
+        val newOutputStackFromApplying = operatorInfosForUnits[operator.operator]?.func?.invoke(operator, outputStack)
+        return newOutputStackFromApplying ?: outputStack + operator
     }
 
     private val operatorInfosForUnits = hashMapOf(
-            "%" to OperatorInfo(6, "left") { lhs, rhs -> null },
-            "^" to OperatorInfo(5, "right") { lhs, rhs ->
+            "%" to OperatorInfo(6, "left") { operator, outputStack -> outputStack + operator },
+            "^" to OperatorInfo(5, "right") { operator, outputStack ->
+                val (lhs, rhs) = getTopTwoElements(outputStack)
                 if (lhs is Token.UnitOfMeasure && rhs is Token.NumberLiteral) {
                     val num = rhs.num
                     val poweredUnit = MathJs.parseUnitName("1 ${lhs.unitName}").pow(num)
                     val poweredUnitname = poweredUnit.toString().drop("1 ".length)
-                    Token.UnitOfMeasure(poweredUnitname)
+                    outputStack.dropLast(2) + Token.UnitOfMeasure(poweredUnitname)
                 } else {
-                    null
+                    outputStack + operator
                 }
             },
-            "unit" to OperatorInfo(4, "left") { lhs, rhs -> null },
-            "=" to OperatorInfo(0, "left") { lhs, rhs -> null },
-            "+" to OperatorInfo(2, "left") { lhs, rhs -> null },
-            "-" to OperatorInfo(2, "left") { lhs, rhs -> null },
-            "*" to OperatorInfo(3, "left") { lhs, rhs ->
+            "unit" to OperatorInfo(4, "left") { operator, outputStack -> outputStack + operator },
+            "=" to OperatorInfo(0, "left") { operator, outputStack -> outputStack + operator },
+            "+" to OperatorInfo(2, "left") { operator, outputStack -> outputStack + operator },
+            "-" to OperatorInfo(2, "left") { operator, outputStack -> outputStack + operator },
+            UNARY_MINUS_TOKEN_SYMBOL to OperatorInfo(4, "left") { operator, outputStack -> outputStack + operator },
+            "unary+" to OperatorInfo(4, "left") { operator, outputStack -> outputStack + operator },
+            "*" to OperatorInfo(3, "left") { operator, outputStack ->
+                val (lhs, rhs) = getTopTwoElements(outputStack)
                 if (lhs is Token.UnitOfMeasure && rhs is Token.UnitOfMeasure) {
                     val unitnameAfterOperation = getUnitnameAfterOperation(lhs.unitName, rhs.unitName, Quantity::multiply)
-                    Token.UnitOfMeasure(unitnameAfterOperation)
+                    outputStack.dropLast(2) + Token.UnitOfMeasure(unitnameAfterOperation)
                 } else {
-                    null
+                    outputStack + operator
                 }
             },
-            "/" to OperatorInfo(3, "left") { lhs, rhs ->
+            "/" to OperatorInfo(3, "left") { operator, outputStack ->
+                val (lhs, rhs) = getTopTwoElements(outputStack)
                 if (lhs is Token.UnitOfMeasure && rhs is Token.UnitOfMeasure) {
                     val unitnameAfterOperation = getUnitnameAfterOperation(lhs.unitName, rhs.unitName, Quantity::divide)
-                    Token.UnitOfMeasure(unitnameAfterOperation)
+                    outputStack.dropLast(2) + Token.UnitOfMeasure(unitnameAfterOperation)
                 } else {
-                    null
+                    outputStack + operator
                 }
             }
     )
 
+    private fun getTopTwoElements(outputStack: List<Token>): Pair<Token?, Token?> {
+        val lastTwo = outputStack.takeLast(2)
+        val lhs = lastTwo.getOrNull(0)
+        val rhs = lastTwo.getOrNull(1)
+        return Pair(lhs, rhs)
+    }
+
     data class OperatorInfo(val precedence: Int, val associativity: String,
-                            val func: (lhs: Any, rhs: Any) -> Token?)
+                            val func: (Token.Operator, List<Token>) -> List<Token>)
 
     private fun getUnitnameAfterOperation(lhsUnitname: String, rhsUnitname: String, func: (lhs: Quantity, rhs: Quantity) -> Any): String {
         val lhs = MathJs.parseUnitName("1 $lhsUnitname")
@@ -206,6 +221,7 @@ class LineParser() {
         }
         return text
     }
+
     internal data class EvaulationResult(
             val parsedTokens: List<Token>,
             val tokensWithMergedCompoundUnits: List<Token>,

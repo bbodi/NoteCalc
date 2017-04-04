@@ -15,9 +15,12 @@ var NoteCalcJS = function (_, Kotlin) {
   var last = Kotlin.kotlin.collections.last_2p1efm$;
   var dropLast = Kotlin.kotlin.collections.dropLast_yzln2o$;
   var takeLast = Kotlin.kotlin.collections.takeLast_yzln2o$;
+  var getOrNull = Kotlin.kotlin.collections.getOrNull_yzln2o$;
+  var Pair = Kotlin.kotlin.Pair;
   var drop_0 = Kotlin.kotlin.text.drop_6ic1pp$;
   var to = Kotlin.kotlin.to_ujzrz7$;
   var hashMapOf = Kotlin.kotlin.collections.hashMapOf_qfcya0$;
+  var startsWith_0 = Kotlin.kotlin.text.startsWith_7epoxm$;
   var joinToString = Kotlin.kotlin.collections.joinToString_fmv235$;
   var split = Kotlin.kotlin.text.split_o64adg$;
   var toInt = Kotlin.kotlin.text.toInt_pdl1vz$;
@@ -25,7 +28,6 @@ var NoteCalcJS = function (_, Kotlin) {
   var StringBuilder = Kotlin.kotlin.text.StringBuilder;
   var lines = Kotlin.kotlin.text.lines_gw00vp$;
   var plus_1 = Kotlin.kotlin.collections.plus_khz7k3$;
-  var startsWith_0 = Kotlin.kotlin.text.startsWith_7epoxm$;
   var firstOrNull = Kotlin.kotlin.text.firstOrNull_gw00vp$;
   var isWhitespace = Kotlin.kotlin.text.isWhitespace_myv2d0$;
   var emptyList = Kotlin.kotlin.collections.emptyList_287e2$;
@@ -33,7 +35,6 @@ var NoteCalcJS = function (_, Kotlin) {
   var indexOf_0 = Kotlin.kotlin.text.indexOf_8eortd$;
   var padEnd = Kotlin.kotlin.text.padEnd_vrc1nu$;
   var padStart = Kotlin.kotlin.text.padStart_vrc1nu$;
-  var getOrNull = Kotlin.kotlin.collections.getOrNull_yzln2o$;
   var split_0 = Kotlin.kotlin.text.split_ip8yn$;
   var Enum = Kotlin.kotlin.Enum;
   var listOf_0 = Kotlin.kotlin.collections.listOf_i5x0yv$;
@@ -192,16 +193,17 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     return CodeMirrorWrapper_instance;
   }
+  var UNARY_MINUS_TOKEN_SYMBOL;
   function LineParser() {
     this.tokenParser_0 = new TokenParser();
     this.tokenListSimplifier_0 = new TokenListSimplifier();
-    this.operatorInfosForUnits_0 = hashMapOf([to('%', new LineParser$OperatorInfo(6, 'left', LineParser$operatorInfosForUnits$lambda)), to('^', new LineParser$OperatorInfo(5, 'right', LineParser$operatorInfosForUnits$lambda_0)), to('unit', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_1)), to('=', new LineParser$OperatorInfo(0, 'left', LineParser$operatorInfosForUnits$lambda_2)), to('+', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_3)), to('-', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_4)), to('*', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_5(this))), to('/', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_6(this)))]);
+    this.operatorInfosForUnits_0 = hashMapOf([to('%', new LineParser$OperatorInfo(6, 'left', LineParser$operatorInfosForUnits$lambda)), to('^', new LineParser$OperatorInfo(5, 'right', LineParser$operatorInfosForUnits$lambda_0(this))), to('unit', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_1)), to('=', new LineParser$OperatorInfo(0, 'left', LineParser$operatorInfosForUnits$lambda_2)), to('+', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_3)), to('-', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_4)), to(UNARY_MINUS_TOKEN_SYMBOL, new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_5)), to('unary+', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_6)), to('*', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_7(this))), to('/', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_8(this)))]);
   }
   LineParser.prototype.parseProcessAndEvaulate_0 = function (functionNames, line, variableNames) {
     var tmp$;
     try {
       var parsedTokens = this.tokenParser_0.parse_0(line, variableNames, functionNames);
-      var tokensWithMergedCompoundUnits = this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(parsedTokens);
+      var tokensWithMergedCompoundUnits = this.tokenListSimplifier_0.mergeCompoundUnits_0(parsedTokens);
       var postFixNotationTokens = this.shuntingYard_0(tokensWithMergedCompoundUnits, functionNames);
       var highlightingInfos = this.createHighlightingNamesForTokens_0(parsedTokens);
       var lastToken = lastOrNull(postFixNotationTokens);
@@ -219,7 +221,7 @@ var NoteCalcJS = function (_, Kotlin) {
   LineParser.prototype.shuntingYard_0 = function (inputTokens, functionNames) {
     var output = Kotlin.kotlin.collections.emptyList_287e2$();
     var operatorStack = Kotlin.kotlin.collections.emptyList_287e2$();
-    var tmp$ = this.shuntingYardRec_0(inputTokens, operatorStack, output, functionNames)
+    var tmp$ = this.shuntingYardRec_0(inputTokens, operatorStack, output, functionNames, null)
     , newOperatorStack = tmp$.component1()
     , newOutput = tmp$.component2();
     var tmp$_0;
@@ -231,8 +233,8 @@ var NoteCalcJS = function (_, Kotlin) {
     }
     return accumulator;
   };
-  LineParser.prototype.shuntingYardRec_0 = function (inputTokens, operatorStack, output, functionNames) {
-    var tmp$_0;
+  LineParser.prototype.shuntingYardRec_0 = function (inputTokens, operatorStack, output, functionNames, lastToken) {
+    var tmp$_2;
     if (inputTokens.isEmpty()) {
       return new LineParser$ShuntingYardStacks(operatorStack, output);
     }
@@ -240,42 +242,59 @@ var NoteCalcJS = function (_, Kotlin) {
       var inputToken = first(inputTokens);
       if (Kotlin.isType(inputToken, Token$Operator))
         if (Kotlin.equals(inputToken.operator, '(')) {
-          tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, inputToken), output);
+          tmp$_2 = new LineParser$ShuntingYardStacks(plus(operatorStack, inputToken), output);
         }
          else if (Kotlin.equals(inputToken.operator, ')')) {
           var modifiedStacksAfterBracketRule = this.popAnythingUntilOpeningBracket_0(operatorStack, output);
-          tmp$_0 = modifiedStacksAfterBracketRule;
+          tmp$_2 = modifiedStacksAfterBracketRule;
+        }
+         else if (Kotlin.equals(inputToken.operator, '-')) {
+          if (lastToken == null || (Kotlin.isType(lastToken, Token$Operator) && !Kotlin.equals(lastToken.operator, ')'))) {
+            tmp$_2 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator(UNARY_MINUS_TOKEN_SYMBOL)), output);
+          }
+           else {
+            var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
+            , newOperatorStack = tmp$.component1()
+            , newOutput = tmp$.component2();
+            tmp$_2 = new LineParser$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
+          }
+        }
+         else if (Kotlin.equals(inputToken.operator, '+')) {
+          var tmp$_0 = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
+          , newOperatorStack_0 = tmp$_0.component1()
+          , newOutput_0 = tmp$_0.component2();
+          tmp$_2 = new LineParser$ShuntingYardStacks(plus(newOperatorStack_0, inputToken), newOutput_0);
         }
          else {
-          var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
-          , newOperatorStack = tmp$.component1()
-          , newOutput = tmp$.component2();
-          tmp$_0 = new LineParser$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
+          var tmp$_1 = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
+          , newOperatorStack_1 = tmp$_1.component1()
+          , newOutput_1 = tmp$_1.component2();
+          tmp$_2 = new LineParser$ShuntingYardStacks(plus(newOperatorStack_1, inputToken), newOutput_1);
         }
        else if (Kotlin.isType(inputToken, Token$NumberLiteral))
-        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
       else if (Kotlin.isType(inputToken, Token$StringLiteral))
         if (contains_0(functionNames, inputToken.str)) {
-          tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator('fun ' + inputToken.str)), plus(output, inputToken));
+          tmp$_2 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator('fun ' + inputToken.str)), plus(output, inputToken));
         }
          else if (Kotlin.equals(inputToken.str, ',')) {
-          tmp$_0 = this.shuntingYardOperatorRule_0(operatorStack, output, ',');
+          tmp$_2 = this.shuntingYardOperatorRule_0(operatorStack, output, ',');
         }
          else {
-          tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+          tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
         }
        else if (Kotlin.isType(inputToken, Token$UnitOfMeasure)) {
         this.shuntingYardOperatorRule_0(operatorStack, output, 'unit');
-        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
       }
        else if (Kotlin.isType(inputToken, Token$Variable))
-        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
       else
-        tmp$_0 = Kotlin.noWhenBranchMatched();
-      var tmp$_1 = tmp$_0
-      , newOperatorStack_0 = tmp$_1.component1()
-      , newOutput_0 = tmp$_1.component2();
-      return this.shuntingYardRec_0(drop(inputTokens, 1), newOperatorStack_0, newOutput_0, functionNames);
+        tmp$_2 = Kotlin.noWhenBranchMatched();
+      var tmp$_3 = tmp$_2
+      , newOperatorStack_2 = tmp$_3.component1()
+      , newOutput_2 = tmp$_3.component2();
+      return this.shuntingYardRec_0(drop(inputTokens, 1), newOperatorStack_2, newOutput_2, functionNames, inputToken);
     }
   };
   function LineParser$ShuntingYardStacks(operatorStack, output) {
@@ -343,24 +362,16 @@ var NoteCalcJS = function (_, Kotlin) {
       return new LineParser$ShuntingYardStacks(operatorStack, output);
     }
   };
-  LineParser.prototype.applyOrPutOperatorOnTheStack_0 = function (operator, stack) {
-    var tmp$, tmp$_0, tmp$_1;
-    if (stack.size < 2) {
-      tmp$_1 = plus(stack, operator);
-    }
-     else {
-      var lastTwo = takeLast(stack, 2);
-      var lhs = lastTwo.get_za3lpa$(0);
-      var rhs = lastTwo.get_za3lpa$(1);
-      var newTokenFromApplying = (tmp$_0 = (tmp$ = this.operatorInfosForUnits_0.get_11rb$(operator.operator)) != null ? tmp$.func : null) != null ? tmp$_0(lhs, rhs) : null;
-      if (newTokenFromApplying != null) {
-        tmp$_1 = plus(dropLast(stack, 2), newTokenFromApplying);
-      }
-       else {
-        tmp$_1 = plus(stack, operator);
-      }
-    }
-    return tmp$_1;
+  LineParser.prototype.applyOrPutOperatorOnTheStack_0 = function (operator, outputStack) {
+    var tmp$, tmp$_0;
+    var newOutputStackFromApplying = (tmp$_0 = (tmp$ = this.operatorInfosForUnits_0.get_11rb$(operator.operator)) != null ? tmp$.func : null) != null ? tmp$_0(operator, outputStack) : null;
+    return newOutputStackFromApplying != null ? newOutputStackFromApplying : plus(outputStack, operator);
+  };
+  LineParser.prototype.getTopTwoElements_0 = function (outputStack) {
+    var lastTwo = takeLast(outputStack, 2);
+    var lhs = getOrNull(lastTwo, 0);
+    var rhs = getOrNull(lastTwo, 1);
+    return new Pair(lhs, rhs);
   };
   function LineParser$OperatorInfo(precedence, associativity, func) {
     this.precedence = precedence;
@@ -381,7 +392,7 @@ var NoteCalcJS = function (_, Kotlin) {
   LineParser$OperatorInfo.prototype.component3 = function () {
     return this.func;
   };
-  LineParser$OperatorInfo.prototype.copy_f81brm$ = function (precedence, associativity, func) {
+  LineParser$OperatorInfo.prototype.copy_1fqtyv$ = function (precedence, associativity, func) {
     return new LineParser$OperatorInfo(precedence === void 0 ? this.precedence : precedence, associativity === void 0 ? this.associativity : associativity, func === void 0 ? this.func : func);
   };
   LineParser$OperatorInfo.prototype.toString = function () {
@@ -499,55 +510,72 @@ var NoteCalcJS = function (_, Kotlin) {
   LineParser$EvaulationResult.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.parsedTokens, other.parsedTokens) && Kotlin.equals(this.tokensWithMergedCompoundUnits, other.tokensWithMergedCompoundUnits) && Kotlin.equals(this.postFixNotationTokens, other.postFixNotationTokens) && Kotlin.equals(this.highlightedTexts, other.highlightedTexts) && Kotlin.equals(this.lastToken, other.lastToken)))));
   };
-  function LineParser$operatorInfosForUnits$lambda(lhs, rhs) {
-    return null;
+  function LineParser$operatorInfosForUnits$lambda(operator, outputStack) {
+    return plus(outputStack, operator);
   }
-  function LineParser$operatorInfosForUnits$lambda_0(lhs, rhs) {
-    if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$NumberLiteral)) {
-      var num_1 = rhs.num;
-      var poweredUnit = pow(math.unit('1 ' + lhs.unitName), num_1);
-      var poweredUnitname = drop_0(poweredUnit.toString(), '1 '.length);
-      return new Token$UnitOfMeasure(poweredUnitname);
-    }
-     else {
-      return null;
-    }
+  function LineParser$operatorInfosForUnits$lambda_0(this$LineParser) {
+    return function (operator, outputStack) {
+      var tmp$ = this$LineParser.getTopTwoElements_0(outputStack)
+      , lhs = tmp$.component1()
+      , rhs = tmp$.component2();
+      if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$NumberLiteral)) {
+        var num_1 = rhs.num;
+        var poweredUnit = pow(math.unit('1 ' + lhs.unitName), num_1);
+        var poweredUnitname = drop_0(poweredUnit.toString(), '1 '.length);
+        return plus(dropLast(outputStack, 2), new Token$UnitOfMeasure(poweredUnitname));
+      }
+       else {
+        return plus(outputStack, operator);
+      }
+    };
   }
-  function LineParser$operatorInfosForUnits$lambda_1(lhs, rhs) {
-    return null;
+  function LineParser$operatorInfosForUnits$lambda_1(operator, outputStack) {
+    return plus(outputStack, operator);
   }
-  function LineParser$operatorInfosForUnits$lambda_2(lhs, rhs) {
-    return null;
+  function LineParser$operatorInfosForUnits$lambda_2(operator, outputStack) {
+    return plus(outputStack, operator);
   }
-  function LineParser$operatorInfosForUnits$lambda_3(lhs, rhs) {
-    return null;
+  function LineParser$operatorInfosForUnits$lambda_3(operator, outputStack) {
+    return plus(outputStack, operator);
   }
-  function LineParser$operatorInfosForUnits$lambda_4(lhs, rhs) {
-    return null;
+  function LineParser$operatorInfosForUnits$lambda_4(operator, outputStack) {
+    return plus(outputStack, operator);
   }
-  function LineParser$operatorInfosForUnits$lambda_5(this$LineParser) {
-    return function (lhs, rhs) {
+  function LineParser$operatorInfosForUnits$lambda_5(operator, outputStack) {
+    return plus(outputStack, operator);
+  }
+  function LineParser$operatorInfosForUnits$lambda_6(operator, outputStack) {
+    return plus(outputStack, operator);
+  }
+  function LineParser$operatorInfosForUnits$lambda_7(this$LineParser) {
+    return function (operator, outputStack) {
+      var tmp$ = this$LineParser.getTopTwoElements_0(outputStack)
+      , lhs = tmp$.component1()
+      , rhs = tmp$.component2();
       if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$UnitOfMeasure)) {
         var unitnameAfterOperation = this$LineParser.getUnitnameAfterOperation_0(lhs.unitName, rhs.unitName, Kotlin.getCallableRef('multiply', function ($receiver, other) {
           return multiply($receiver, other);
         }));
-        return new Token$UnitOfMeasure(unitnameAfterOperation);
+        return plus(dropLast(outputStack, 2), new Token$UnitOfMeasure(unitnameAfterOperation));
       }
        else {
-        return null;
+        return plus(outputStack, operator);
       }
     };
   }
-  function LineParser$operatorInfosForUnits$lambda_6(this$LineParser) {
-    return function (lhs, rhs) {
+  function LineParser$operatorInfosForUnits$lambda_8(this$LineParser) {
+    return function (operator, outputStack) {
+      var tmp$ = this$LineParser.getTopTwoElements_0(outputStack)
+      , lhs = tmp$.component1()
+      , rhs = tmp$.component2();
       if (Kotlin.isType(lhs, Token$UnitOfMeasure) && Kotlin.isType(rhs, Token$UnitOfMeasure)) {
         var unitnameAfterOperation = this$LineParser.getUnitnameAfterOperation_0(lhs.unitName, rhs.unitName, Kotlin.getCallableRef('divide', function ($receiver, other) {
           return divide($receiver, other);
         }));
-        return new Token$UnitOfMeasure(unitnameAfterOperation);
+        return plus(dropLast(outputStack, 2), new Token$UnitOfMeasure(unitnameAfterOperation));
       }
        else {
-        return null;
+        return plus(outputStack, operator);
       }
     };
   }
@@ -562,16 +590,19 @@ var NoteCalcJS = function (_, Kotlin) {
   var UNNAMED_TITLE;
   function main(args) {
     QUnit.config.autostart = false;
-    if (Kotlin.equals(window.location.search, '?test')) {
+    if (startsWith_0(window.location.search, '?test')) {
       QUnit.start();
+      (new NoteCalcEditorTest()).runTests();
     }
-    var allNoteCalcEntries = getAllNoteCalcEntries(localStorage);
-    createNoteCalcEditors(allNoteCalcEntries);
-    if (nextNoteCalcIndex === 0) {
-      setNoteCalcTitle(localStorage, nextNoteCalcIndex, 'Welcome');
-      setNoteCalcContent(localStorage, nextNoteCalcIndex, defaultText);
-      setNoteCaclcVisibility(localStorage, nextNoteCalcIndex, 'true');
-      addButtonClicked();
+     else {
+      var allNoteCalcEntries = getAllNoteCalcEntries(localStorage);
+      createNoteCalcEditors(allNoteCalcEntries);
+      if (nextNoteCalcIndex === 0) {
+        setNoteCalcTitle(localStorage, nextNoteCalcIndex, 'Welcome');
+        setNoteCalcContent(localStorage, nextNoteCalcIndex, defaultText);
+        setNoteCaclcVisibility(localStorage, nextNoteCalcIndex, 'true');
+        addButtonClicked();
+      }
     }
   }
   function createNoteCalcEditors$lambda$lambda(closure$noteCalcIndex) {
@@ -1117,7 +1148,6 @@ var NoteCalcJS = function (_, Kotlin) {
   function NoteCalcEditor$Companion() {
     NoteCalcEditor$Companion_instance = this;
     this.tokenizer_0 = NoteCalcEditor$Companion$tokenizer$lambda;
-    (new NoteCalcEditorTest()).runTests();
   }
   function NoteCalcEditor$Companion$HighlightedText(text_0, cssClassName) {
     this.text = text_0;
@@ -1350,16 +1380,16 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('200kg alma + 300 kg ban\xE1n'), [num(200), unit('kg'), str('alma'), op('+'), num(300), unit('kg'), str('ban\xE1n')]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('(1 alma + 4 k\xF6rte) * 3 ember'), [op('('), num(1), str('alma'), op('+'), num(4), str('k\xF6rte'), op(')'), op('*'), num(3), str('ember')]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('1/2s'), [num(1), op('/'), num(2), unit('s')]);
-    this.assertTokenListEq_0((new LineParser()).shuntingYard_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('1/2s')), emptyList()), [num(1), num(2), unit('s'), op('/')]);
+    this.assertTokenListEq_0(this.shuntingYard_0('1/2s'), [num(1), num(2), unit('s'), op('/')]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('0b00101 & 0xFF ^ 0xFF00 << 16 >> 16 ! 0xFF'), [num(5), op('&'), num(255), op('^'), num(65280), op('<<'), num(16), op('>>'), num(16), op('!'), num(255)]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('10km/h * 45min in m'), [num(10), unit('km'), op('/'), unit('h'), op('*'), num(45), unit('min'), op('in'), unit('m')]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('10(km/h)^2 * 45min in m'), [num(10), op('('), unit('km'), op('/'), unit('h'), op(')'), op('^'), num(2), op('*'), num(45), unit('min'), op('in'), unit('m')]);
-    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('12km/h')), [num(12), unit('km/h')]);
-    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('12km/h*3')), [num(12), unit('km/h'), op('*'), num(3)]);
+    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnits_0(this.tokenParser_0.parse_0('12km/h')), [num(12), unit('km/h')]);
+    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnits_0(this.tokenParser_0.parse_0('12km/h*3')), [num(12), unit('km/h'), op('*'), num(3)]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('-3'), [op('-'), num(3)]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0xFF'), [op('-'), num(255)]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0b110011'), [op('-'), num(51)]);
-    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this.tokenParser_0.parse_0('-3')), [op('-'), num(3)]);
+    this.assertTokenListEq_0(this.tokenListSimplifier_0.mergeCompoundUnits_0(this.tokenParser_0.parse_0('-3')), [op('-'), num(3)]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0xFF'), [op('-'), num(255)]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('-0b110011'), [op('-'), num(51)]);
     this.assertEq_0('30 km', '(10+20)km');
@@ -1371,6 +1401,7 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(220), '200 + 10%');
     this.assertEq_1(new Operand$Number(180), '200 - 10%');
     this.assertEq_1(new Operand$Number(20), '200 * 10%');
+    this.assertEq_1(new Operand$Percentage(30), '(10 + 20)%');
     this.assertEq_1(new Operand$Number(181.82, NumberType$Float_getInstance()), '10% on what is $200');
     this.assertEq_1(new Operand$Number(2000), '10% of what is $200');
     this.assertEq_1(new Operand$Number(222.22, NumberType$Float_getInstance()), '10% off what is $200');
@@ -1391,24 +1422,32 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(100), '1GB / 10MB');
     QUnit.test('The parser must find the longest variable name.', NoteCalcEditorTest$runTests$lambda);
     QUnit.test('The parser must find the longest function name.', NoteCalcEditorTest$runTests$lambda_0);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('9-3'), [num(9), op('-'), num(3)]);
+    this.assertTokenListEq_0(this.tokenParser_0.parse_0('200 - 10%'), [num(200), op('-'), num(10), op('%')]);
+    this.assertTokenListEq_0(this.shuntingYard_0('-1 + -2'), [num(1), op(UNARY_MINUS_TOKEN_SYMBOL), num(2), op(UNARY_MINUS_TOKEN_SYMBOL), op('+')]);
+    this.assertTokenListEq_0(this.shuntingYard_0('-1 - -2'), [num(1), op(UNARY_MINUS_TOKEN_SYMBOL), num(2), op(UNARY_MINUS_TOKEN_SYMBOL), op('-')]);
+    this.assertEq_1(new Operand$Number(-3), '-3');
+    this.assertEq_1(new Operand$Percentage(-30), '-30%');
+    this.assertEq_1(new Operand$Number(-3), '-1 + -2');
+    this.assertEq_1(new Operand$Number(1), '-1 - -2');
   };
-  function NoteCalcEditorTest$assertEq$lambda(this$NoteCalcEditorTest, closure$actualInput, closure$expectedValue) {
+  function NoteCalcEditorTest$assertEq$lambda(closure$actualInput, this$NoteCalcEditorTest, closure$expectedValue) {
     return function (assert) {
       var tmp$, tmp$_0;
-      var actual = Kotlin.isType(tmp$_0 = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$((new LineParser()).shuntingYard_0(this$NoteCalcEditorTest.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this$NoteCalcEditorTest.tokenParser_0.parse_0(closure$actualInput)), emptyList()), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE(), Operand$Quantity) ? tmp$_0 : Kotlin.throwCCE();
+      var actual = Kotlin.isType(tmp$_0 = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$(this$NoteCalcEditorTest.shuntingYard_0(closure$actualInput), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE(), Operand$Quantity) ? tmp$_0 : Kotlin.throwCCE();
       assert.ok(math.unit(closure$expectedValue).equals(actual.quantity), closure$expectedValue + ' != ' + actual);
     };
   }
   NoteCalcEditorTest.prototype.assertEq_0 = function (expectedValue, actualInput) {
-    QUnit.test(actualInput, NoteCalcEditorTest$assertEq$lambda(this, actualInput, expectedValue));
+    QUnit.test(actualInput, NoteCalcEditorTest$assertEq$lambda(actualInput, this, expectedValue));
   };
   function NoteCalcEditorTest$assertEq$lambda_0(a, b) {
     return Math.round(Kotlin.numberToDouble(a) * 100) === Math.round(Kotlin.numberToDouble(b) * 100);
   }
-  function NoteCalcEditorTest$assertEq$lambda_1(this$NoteCalcEditorTest, closure$actualInput, closure$expectedValue, closure$floatEq) {
+  function NoteCalcEditorTest$assertEq$lambda_1(closure$actualInput, this$NoteCalcEditorTest, closure$expectedValue, closure$floatEq) {
     return function (assert) {
       var tmp$, tmp$_0, tmp$_1;
-      var actual = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$((new LineParser()).shuntingYard_0(this$NoteCalcEditorTest.tokenListSimplifier_0.mergeCompoundUnitsAndUnaryMinusOperators_0(this$NoteCalcEditorTest.tokenParser_0.parse_0(closure$actualInput)), emptyList()), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE();
+      var actual = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$(this$NoteCalcEditorTest.shuntingYard_0(closure$actualInput), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE();
       tmp$_0 = closure$expectedValue;
       if (Kotlin.isType(tmp$_0, Operand$Number))
         tmp$_1 = (Kotlin.isType(actual, Operand$Number) && closure$floatEq(actual.num, closure$expectedValue.num));
@@ -1424,7 +1463,7 @@ var NoteCalcJS = function (_, Kotlin) {
   }
   NoteCalcEditorTest.prototype.assertEq_1 = function (expectedValue, actualInput) {
     var floatEq = NoteCalcEditorTest$assertEq$lambda_0;
-    QUnit.test(actualInput, NoteCalcEditorTest$assertEq$lambda_1(this, actualInput, expectedValue, floatEq));
+    QUnit.test(actualInput, NoteCalcEditorTest$assertEq$lambda_1(actualInput, this, expectedValue, floatEq));
   };
   function NoteCalcEditorTest$assertTokenListEq$lambda(closure$actualTokens, closure$expectedTokens, this$NoteCalcEditorTest) {
     return function (assert) {
@@ -1457,7 +1496,10 @@ var NoteCalcJS = function (_, Kotlin) {
     };
   }
   NoteCalcEditorTest.prototype.assertTokenListEq_0 = function (actualTokens, expectedTokens) {
-    QUnit.test('', NoteCalcEditorTest$assertTokenListEq$lambda(actualTokens, expectedTokens, this));
+    QUnit.test(joinToString(actualTokens), NoteCalcEditorTest$assertTokenListEq$lambda(actualTokens, expectedTokens, this));
+  };
+  NoteCalcEditorTest.prototype.shuntingYard_0 = function (actualInput) {
+    return (new LineParser()).shuntingYard_0(this.tokenListSimplifier_0.mergeCompoundUnits_0(this.tokenParser_0.parse_0(actualInput)), emptyList());
   };
   NoteCalcEditorTest.prototype.compareFloats_0 = function (actual, expected, decimalCount) {
     var tmp$;
@@ -1725,12 +1767,15 @@ var NoteCalcJS = function (_, Kotlin) {
   Token$NumberLiteral.prototype.equals = function (other) {
     return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.num, other.num) && Kotlin.equals(this.originalStringRepresentation, other.originalStringRepresentation) && Kotlin.equals(this.type, other.type)))));
   };
-  function Token$Operator(operator) {
+  function Token$Operator(operator, asStringValue) {
+    if (asStringValue === void 0)
+      asStringValue = operator;
     Token.call(this);
     this.operator = operator;
+    this.asStringValue = asStringValue;
   }
   Token$Operator.prototype.asString = function () {
-    return this.operator;
+    return this.asStringValue;
   };
   Token$Operator.prototype.toString = function () {
     return 'Op(' + this.operator + ')';
@@ -1743,16 +1788,20 @@ var NoteCalcJS = function (_, Kotlin) {
   Token$Operator.prototype.component1 = function () {
     return this.operator;
   };
-  Token$Operator.prototype.copy_61zpoe$ = function (operator) {
-    return new Token$Operator(operator === void 0 ? this.operator : operator);
+  Token$Operator.prototype.component2 = function () {
+    return this.asStringValue;
+  };
+  Token$Operator.prototype.copy_puj7f4$ = function (operator, asStringValue) {
+    return new Token$Operator(operator === void 0 ? this.operator : operator, asStringValue === void 0 ? this.asStringValue : asStringValue);
   };
   Token$Operator.prototype.hashCode = function () {
     var result = 0;
     result = result * 31 + Kotlin.hashCode(this.operator) | 0;
+    result = result * 31 + Kotlin.hashCode(this.asStringValue) | 0;
     return result;
   };
   Token$Operator.prototype.equals = function (other) {
-    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && Kotlin.equals(this.operator, other.operator))));
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.operator, other.operator) && Kotlin.equals(this.asStringValue, other.asStringValue)))));
   };
   Token.$metadata$ = {
     kind: Kotlin.Kind.CLASS,
@@ -1761,31 +1810,35 @@ var NoteCalcJS = function (_, Kotlin) {
   };
   function TokenListEvaulator() {
   }
+  TokenListEvaulator.prototype.processPostfixNotationStack_h27eq8$ = function (tokens, variables, functions) {
+    var quantitativeStack = this.processPostfixNotationStackRec_oxe9kf$.call(this, Kotlin.kotlin.collections.emptyList_287e2$(), tokens, null, variables, functions);
+    return lastOrNull(quantitativeStack);
+  };
   TokenListEvaulator.prototype.processPostfixNotationStackRec_oxe9kf$ = function (quantitativeStack, tokens, lastUnit, variables, functions) {
-    var tmp$, tmp$_0, tmp$_1;
+    var tmp$, tmp$_0, tmp$_1, tmp$_2;
     if (tokens.isEmpty()) {
       return quantitativeStack;
     }
     var lastUnit_0 = lastUnit;
     var incomingToken = first(tokens);
     if (Kotlin.isType(incomingToken, Token$NumberLiteral))
-      tmp$_1 = plus(quantitativeStack, new Operand$Number(incomingToken.num, incomingToken.type));
+      tmp$_2 = plus(quantitativeStack, new Operand$Number(incomingToken.num, incomingToken.type));
     else if (Kotlin.isType(incomingToken, Token$Variable)) {
       var variable = variables.get_11rb$(incomingToken.variableName);
       if (variable != null) {
-        tmp$_1 = plus(quantitativeStack, variable);
+        tmp$_2 = plus(quantitativeStack, variable);
       }
        else
-        tmp$_1 = quantitativeStack;
+        tmp$_2 = quantitativeStack;
     }
      else if (Kotlin.isType(incomingToken, Token$UnitOfMeasure)) {
       var topOfStack = lastOrNull(quantitativeStack);
       if (topOfStack != null && Kotlin.isType(topOfStack, Operand$Number)) {
-        tmp$_1 = plus(dropLast(quantitativeStack, 1), this.addUnitToTheTopOfStackEntry_0(topOfStack, incomingToken));
+        tmp$_2 = plus(dropLast(quantitativeStack, 1), this.addUnitToTheTopOfStackEntry_0(topOfStack, incomingToken));
       }
        else {
         lastUnit_0 = incomingToken.unitName;
-        tmp$_1 = quantitativeStack;
+        tmp$_2 = quantitativeStack;
       }
     }
      else if (Kotlin.isType(incomingToken, Token$Operator))
@@ -1797,21 +1850,21 @@ var NoteCalcJS = function (_, Kotlin) {
           var methodScope = HashMap_init(plus_0(variables, toMap(zip_0(functionDef.argumentNames, arguments_0))));
           var $receiver = functionDef.tokenLines;
           var destination = Kotlin.kotlin.collections.ArrayList_init_ww73n8$(Kotlin.kotlin.collections.collectionSizeOrDefault_ba2ldo$($receiver, 10));
-          var tmp$_2;
-          tmp$_2 = $receiver.iterator();
-          while (tmp$_2.hasNext()) {
-            var item = tmp$_2.next();
-            var tmp$_3 = destination.add_11rb$;
-            var tmp$_4;
+          var tmp$_3;
+          tmp$_3 = $receiver.iterator();
+          while (tmp$_3.hasNext()) {
+            var item = tmp$_3.next();
+            var tmp$_4 = destination.add_11rb$;
+            var tmp$_5;
             var lastToken = lastOrNull(item.postfixNotationStack);
-            var resultOperand_1 = this.processPostfixNotationStack_h27eq8$(item.postfixNotationStack, methodScope, functions);
-            if (resultOperand_1 != null && Kotlin.isType(lastToken, Token$Operator) && Kotlin.equals(lastToken.operator, '=')) {
+            var resultOperand_0 = this.processPostfixNotationStack_h27eq8$(item.postfixNotationStack, methodScope, functions);
+            if (resultOperand_0 != null && Kotlin.isType(lastToken, Token$Operator) && Kotlin.equals(lastToken.operator, '=')) {
               var $receiver_0 = item.line;
               var takeWhile$result;
               takeWhile$break: {
-                var tmp$_5;
-                tmp$_5 = $receiver_0.length - 1 | 0;
-                for (var index = 0; index <= tmp$_5; index++) {
+                var tmp$_6;
+                tmp$_6 = $receiver_0.length - 1 | 0;
+                for (var index = 0; index <= tmp$_6; index++) {
                   if (!(Kotlin.unboxChar(Kotlin.toBoxedChar($receiver_0.charCodeAt(index))) !== 61)) {
                     takeWhile$result = $receiver_0.substring(0, index);
                     break takeWhile$break;
@@ -1820,27 +1873,27 @@ var NoteCalcJS = function (_, Kotlin) {
                 takeWhile$result = $receiver_0;
               }
               var $receiver_1 = takeWhile$result;
-              var tmp$_6;
-              tmp$_4 = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_6 = $receiver_1) ? tmp$_6 : Kotlin.throwCCE()).toString();
+              var tmp$_7;
+              tmp$_5 = Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_7 = $receiver_1) ? tmp$_7 : Kotlin.throwCCE()).toString();
             }
              else
-              tmp$_4 = null;
-            var currentVariableName = tmp$_4;
-            if (currentVariableName != null && resultOperand_1 != null) {
-              methodScope.put_xwzc9p$(currentVariableName, resultOperand_1);
+              tmp$_5 = null;
+            var currentVariableName = tmp$_5;
+            if (currentVariableName != null && resultOperand_0 != null) {
+              methodScope.put_xwzc9p$(currentVariableName, resultOperand_0);
             }
-            tmp$_3.call(destination, resultOperand_1);
+            tmp$_4.call(destination, resultOperand_0);
           }
           var resultOperand = lastOrNull(destination);
           if (resultOperand != null) {
-            tmp$_1 = plus(dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0), resultOperand);
+            tmp$_2 = plus(dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0), resultOperand);
           }
            else {
-            tmp$_1 = dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0);
+            tmp$_2 = dropLast(quantitativeStack, functionDef.argumentNames.size + 1 | 0);
           }
         }
          else {
-          tmp$_1 = dropLast(quantitativeStack, 1);
+          tmp$_2 = dropLast(quantitativeStack, 1);
         }
       }
        else {
@@ -1848,76 +1901,74 @@ var NoteCalcJS = function (_, Kotlin) {
           var topOfStack_0 = last(quantitativeStack);
           if (Kotlin.isType(topOfStack_0, Operand$Number)) {
             var num_1 = topOfStack_0.num;
-            tmp$_1 = plus(dropLast(quantitativeStack, 1), new Operand$Percentage(num_1, topOfStack_0.type));
+            tmp$_2 = plus(dropLast(quantitativeStack, 1), new Operand$Percentage(num_1, topOfStack_0.type));
           }
            else {
-            tmp$_1 = dropLast(quantitativeStack, 1);
-          }
-        }
-         else if (quantitativeStack.size >= 2) {
-          var lastTwo = takeLast(quantitativeStack, 2);
-          var lhs = lastTwo.get_za3lpa$(0);
-          var rhs = lastTwo.get_za3lpa$(1);
-          try {
-            tmp$ = this.applyOperation_0(incomingToken.operator, lhs, rhs);
-          }
-           catch (e) {
-            if (Kotlin.isType(e, Throwable)) {
-              console.error(e);
-              tmp$ = null;
-            }
-             else
-              throw e;
-          }
-          var resultOperand_0 = tmp$;
-          if (resultOperand_0 != null) {
-            tmp$_1 = plus(dropLast(quantitativeStack, 2), resultOperand_0);
-          }
-           else {
-            tmp$_1 = quantitativeStack;
+            tmp$_2 = dropLast(quantitativeStack, 1);
           }
         }
          else {
-          if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, 'in')) {
-            var theQuantityThatWillBeConverted = lastOrNull(quantitativeStack);
-            if (lastUnit_0 != null && Kotlin.isType(theQuantityThatWillBeConverted, Operand$Quantity)) {
-              try {
-                tmp$_0 = theQuantityThatWillBeConverted.quantity.to(lastUnit_0);
+          if (!quantitativeStack.isEmpty()) {
+            var lastTwo = takeLast(quantitativeStack, 2);
+            var lhs = lastTwo.get_za3lpa$(0);
+            var rhs = getOrNull(lastTwo, 1);
+            try {
+              tmp$ = this.applyOperation_0(incomingToken.operator, lhs, rhs);
+            }
+             catch (e) {
+              if (Kotlin.isType(e, Throwable)) {
+                console.error(e);
+                tmp$ = to(null, 0);
               }
-               catch (e) {
-                if (Kotlin.isType(e, Throwable)) {
-                  tmp$_0 = null;
-                }
-                 else
-                  throw e;
-              }
-              var convertedQuantity = tmp$_0;
-              if (convertedQuantity != null) {
-                tmp$_1 = plus(dropLast(quantitativeStack, 1), new Operand$Quantity(convertedQuantity, theQuantityThatWillBeConverted.type));
-              }
-               else {
-                tmp$_1 = quantitativeStack;
-              }
+               else
+                throw e;
+            }
+            var resultOperandAnddropCount = tmp$;
+            if (resultOperandAnddropCount.first != null) {
+              tmp$_2 = plus(dropLast(quantitativeStack, resultOperandAnddropCount.second), (tmp$_0 = resultOperandAnddropCount.first) != null ? tmp$_0 : Kotlin.throwNPE());
             }
              else {
-              tmp$_1 = quantitativeStack;
+              tmp$_2 = quantitativeStack;
             }
           }
            else {
-            tmp$_1 = quantitativeStack;
+            if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, 'in')) {
+              var theQuantityThatWillBeConverted = lastOrNull(quantitativeStack);
+              if (lastUnit_0 != null && Kotlin.isType(theQuantityThatWillBeConverted, Operand$Quantity)) {
+                try {
+                  tmp$_1 = theQuantityThatWillBeConverted.quantity.to(lastUnit_0);
+                }
+                 catch (e) {
+                  if (Kotlin.isType(e, Throwable)) {
+                    tmp$_1 = null;
+                  }
+                   else
+                    throw e;
+                }
+                var convertedQuantity = tmp$_1;
+                if (convertedQuantity != null) {
+                  tmp$_2 = plus(dropLast(quantitativeStack, 1), new Operand$Quantity(convertedQuantity, theQuantityThatWillBeConverted.type));
+                }
+                 else {
+                  tmp$_2 = quantitativeStack;
+                }
+              }
+               else {
+                tmp$_2 = quantitativeStack;
+              }
+            }
+             else {
+              tmp$_2 = quantitativeStack;
+            }
           }
         }
       }
      else if (Kotlin.isType(incomingToken, Token$StringLiteral))
-      tmp$_1 = quantitativeStack;
+      tmp$_2 = quantitativeStack;
     else
-      tmp$_1 = Kotlin.noWhenBranchMatched();
-    var modifiedQuantitativeStack = tmp$_1;
+      tmp$_2 = Kotlin.noWhenBranchMatched();
+    var modifiedQuantitativeStack = tmp$_2;
     return this.processPostfixNotationStackRec_oxe9kf$(modifiedQuantitativeStack, drop(tokens, 1), lastUnit_0, variables, functions);
-  };
-  TokenListEvaulator.prototype.processPostfixNotationStack_h27eq8$ = function (tokens, variables, functions) {
-    var quantitativeStack = this.processPostfixNotationStackRec_oxe9kf$.call(this, Kotlin.kotlin.collections.emptyList_287e2$(), tokens, null, variables, functions);
-    return lastOrNull(quantitativeStack);
   };
   TokenListEvaulator.prototype.addUnitToTheTopOfStackEntry_0 = function (targetNumber, token) {
     var number = targetNumber.num;
@@ -1928,31 +1979,33 @@ var NoteCalcJS = function (_, Kotlin) {
     var tmp$;
     try {
       if (Kotlin.equals(operator, 'as a % of'))
-        tmp$ = this.asAPercentOfOperator_0(lhs, rhs);
+        tmp$ = to(this.asAPercentOfOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, 'on what is'))
-        tmp$ = this.onWhatIsOperator_0(lhs, rhs);
+        tmp$ = to(this.onWhatIsOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, 'of what is'))
-        tmp$ = this.ofWhatIsOperator_0(lhs, rhs);
+        tmp$ = to(this.ofWhatIsOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, 'off what is'))
-        tmp$ = this.offWhatIsOperator_0(lhs, rhs);
+        tmp$ = to(this.offWhatIsOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, '*'))
-        tmp$ = this.multiplyOperator_0(lhs, rhs);
+        tmp$ = to(this.multiplyOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, '/'))
-        tmp$ = this.divideOperator_0(lhs, rhs);
+        tmp$ = to(this.divideOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, '+'))
-        tmp$ = this.plusOperator_0(lhs, rhs);
+        tmp$ = to(this.plusOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, '-'))
-        tmp$ = this.minusOperator_0(lhs, rhs);
+        tmp$ = to(this.minusOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
+      else if (Kotlin.equals(operator, UNARY_MINUS_TOKEN_SYMBOL))
+        tmp$ = to(this.unaryMinusOperator_0(rhs != null ? rhs : lhs), 1);
       else if (Kotlin.equals(operator, '^'))
-        tmp$ = this.powerOperator_0(lhs, rhs);
+        tmp$ = to(this.powerOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else
-        tmp$ = null;
+        tmp$ = to(null, 0);
     }
      catch (e) {
       if (Kotlin.isType(e, Throwable)) {
-        console.error(lhs.asString() + operator + rhs.asString());
+        console.error(lhs.asString() + operator + Kotlin.toString(rhs != null ? rhs.asString() : null));
         console.error(e);
-        tmp$ = null;
+        tmp$ = to(null, 0);
       }
        else
         throw e;
@@ -1983,6 +2036,18 @@ var NoteCalcJS = function (_, Kotlin) {
     }
      else if (Kotlin.isType(lhs, Operand$Percentage))
       tmp$ = null;
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
+  TokenListEvaulator.prototype.unaryMinusOperator_0 = function (operand) {
+    var tmp$;
+    if (Kotlin.isType(operand, Operand$Number))
+      tmp$ = operand.copy_eilmgh$(-Kotlin.numberToDouble(operand.num));
+    else if (Kotlin.isType(operand, Operand$Quantity))
+      tmp$ = operand.copy_zans0s$(operand.quantity);
+    else if (Kotlin.isType(operand, Operand$Percentage))
+      tmp$ = operand.copy_eilmgh$(-Kotlin.numberToDouble(operand.num));
     else
       tmp$ = Kotlin.noWhenBranchMatched();
     return tmp$;
@@ -2250,7 +2315,7 @@ var NoteCalcJS = function (_, Kotlin) {
   };
   function TokenListSimplifier() {
   }
-  TokenListSimplifier.prototype.mergeCompoundUnitsAndUnaryMinusOperators_0 = function (tokens) {
+  TokenListSimplifier.prototype.mergeCompoundUnits_0 = function (tokens) {
     var tmp$;
     var restTokens = tokens;
     var output = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
@@ -2698,6 +2763,11 @@ var NoteCalcJS = function (_, Kotlin) {
   Object.defineProperty(package$notecalc, 'CodeMirrorWrapper', {
     get: CodeMirrorWrapper_getInstance
   });
+  Object.defineProperty(package$notecalc, 'UNARY_MINUS_TOKEN_SYMBOL', {
+    get: function () {
+      return UNARY_MINUS_TOKEN_SYMBOL;
+    }
+  });
   LineParser.ShuntingYardStacks = LineParser$ShuntingYardStacks;
   LineParser.OperatorInfo = LineParser$OperatorInfo;
   package$notecalc.LineParser = LineParser;
@@ -2737,6 +2807,7 @@ var NoteCalcJS = function (_, Kotlin) {
   package$notecalc.TokenListEvaulator = TokenListEvaulator;
   package$notecalc.TokenListSimplifier = TokenListSimplifier;
   package$notecalc.TokenParser = TokenParser;
+  UNARY_MINUS_TOKEN_SYMBOL = 'unary-';
   nextNoteCalcIndex = 0;
   globalVariables = Kotlin.kotlin.collections.HashMap_init_q3lmfv$();
   NOTE_CALC_IDS_KEY = 'commaSeparatedNoteCaclcIds';

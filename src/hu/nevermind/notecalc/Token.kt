@@ -23,8 +23,8 @@ sealed class Token {
         override fun toString(): String = "Num($num)"
     }
 
-    data class Operator(val operator: String) : Token() {
-        override fun asString(): CharSequence = operator
+    data class Operator(val operator: String, val asStringValue: String = operator) : Token() {
+        override fun asString(): CharSequence = asStringValue
         override fun toString(): String = "Op($operator)"
     }
 

@@ -4,6 +4,11 @@ import kotlin.js.Math
 
 class TokenListEvaulator {
 
+    fun processPostfixNotationStack(tokens: List<Token>, variables: Map<String, Operand>, functions: Map<String, NoteCalcEditor.Companion.FunctionDefinition>): Operand? {
+        val quantitativeStack = processPostfixNotationStackRec(listOf<Operand>(), tokens, null, variables, functions)
+        return quantitativeStack.lastOrNull()
+    }
+
     fun processPostfixNotationStackRec(quantitativeStack: List<Operand>,
                                        tokens: List<Token>,
                                        lastUnit: String?,
@@ -65,18 +70,18 @@ class TokenListEvaulator {
                     } else {
                         quantitativeStack.dropLast(1)
                     }
-                } else if (quantitativeStack.size >= 2) {
+                } else if (quantitativeStack.isNotEmpty()) {
                     val lastTwo = quantitativeStack.takeLast(2)
                     val lhs = lastTwo[0]
-                    val rhs = lastTwo[1]
-                    val resultOperand: Operand? = try {
+                    val rhs = lastTwo.getOrNull(1)
+                    val resultOperandAnddropCount = try {
                         applyOperation(incomingToken.operator, lhs, rhs)
                     } catch (e: Throwable) {
                         console.error(e)
-                        null
+                        null to 0
                     }
-                    if (resultOperand != null) {
-                        quantitativeStack.dropLast(2) + resultOperand
+                    if (resultOperandAnddropCount.first != null) {
+                        quantitativeStack.dropLast(resultOperandAnddropCount.second) + resultOperandAnddropCount.first!!
                     } else {
                         quantitativeStack
                     }
@@ -107,35 +112,31 @@ class TokenListEvaulator {
         return processPostfixNotationStackRec(modifiedQuantitativeStack, tokens.drop(1), lastUnit, variables, functions)
     }
 
-    fun processPostfixNotationStack(tokens: List<Token>, variables: Map<String, Operand>, functions: Map<String, NoteCalcEditor.Companion.FunctionDefinition>): Operand? {
-        val quantitativeStack = processPostfixNotationStackRec(listOf<Operand>(), tokens, null, variables, functions)
-        return quantitativeStack.lastOrNull()
-    }
-
     private fun addUnitToTheTopOfStackEntry(targetNumber: Operand.Number, token: Token.UnitOfMeasure): Operand.Quantity {
         val number: Number = targetNumber.num
         val newQuantityWithUnit = MathJs.parseUnitName("$number ${token.unitName}")
         return Operand.Quantity(newQuantityWithUnit, targetNumber.type)
     }
 
-    private fun applyOperation(operator: String, lhs: Operand, rhs: Operand): Operand? {
+    private fun applyOperation(operator: String, lhs: Operand, rhs: Operand?): Pair<Operand?, Int> {
         return try {
             when (operator) {
-                "as a % of" -> asAPercentOfOperator(lhs, rhs)
-                "on what is" -> onWhatIsOperator(lhs, rhs)
-                "of what is" -> ofWhatIsOperator(lhs, rhs)
-                "off what is" -> offWhatIsOperator(lhs, rhs)
-                "*" -> multiplyOperator(lhs, rhs)
-                "/" -> divideOperator(lhs, rhs)
-                "+" -> plusOperator(lhs, rhs)
-                "-" -> minusOperator(lhs, rhs)
-                "^" -> powerOperator(lhs, rhs)
-                else -> null
+                "as a % of" -> asAPercentOfOperator(lhs, rhs!!) to 2
+                "on what is" -> onWhatIsOperator(lhs, rhs!!) to 2
+                "of what is" -> ofWhatIsOperator(lhs, rhs!!) to 2
+                "off what is" -> offWhatIsOperator(lhs, rhs!!) to 2
+                "*" -> multiplyOperator(lhs, rhs!!) to 2
+                "/" -> divideOperator(lhs, rhs!!) to 2
+                "+" -> plusOperator(lhs, rhs!!) to 2
+                "-" -> minusOperator(lhs, rhs!!) to 2
+                UNARY_MINUS_TOKEN_SYMBOL -> unaryMinusOperator(rhs ?: lhs) to 1
+                "^" -> powerOperator(lhs, rhs!!) to 2
+                else -> null to 0
             }
         } catch (e: Throwable) {
-            console.error("${lhs.asString()}$operator${rhs.asString()}")
+            console.error("${lhs.asString()}$operator${rhs?.asString()}")
             console.error(e)
-            null
+            null to 0
         }
     }
 
@@ -151,10 +152,18 @@ class TokenListEvaulator {
                 is Operand.Number -> Operand.Quantity(lhs.quantity.pow(rhs.num.toDouble()), lhs.type)
                 is Operand.Percentage -> null
             }
-
             is Operand.Percentage -> null
         }
     }
+
+    private fun unaryMinusOperator(operand: Operand): Operand? {
+        return when (operand) {
+            is Operand.Number -> operand.copy(num = -operand.num.toDouble())
+            is Operand.Quantity -> operand.copy(quantity = operand.quantity) // TODO negate
+            is Operand.Percentage -> operand.copy(num = -operand.num.toDouble())
+        }
+    }
+
 
     private fun minusOperator(lhs: Operand, rhs: Operand): Operand? {
         return when (lhs) {

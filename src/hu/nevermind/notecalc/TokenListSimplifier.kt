@@ -1,7 +1,7 @@
 package hu.nevermind.notecalc
 
 class TokenListSimplifier {
-    internal fun mergeCompoundUnitsAndUnaryMinusOperators(tokens: List<Token>): List<Token> {
+    internal fun mergeCompoundUnits(tokens: List<Token>): List<Token> {
         var restTokens = tokens
         val output = arrayListOf<Token>()
         var prevToken: Token = Token.StringLiteral("")

@@ -80,7 +80,8 @@ class NoteCalcEditor(defaultValue: String,
                     resultString.append(createDebugString(
                             evaluationResult.parsedTokens,
                             evaluationResult.tokensWithMergedCompoundUnits,
-                            evaluationResult.postFixNotationTokens))
+                            evaluationResult.postFixNotationTokens
+                    ))
                     val currentVariableName = tryParseVariableName(evaluationResult.lastToken, line)
                     val resultOperand = tokenListEvaulator.processPostfixNotationStack(
                             evaluationResult.postFixNotationTokens,
@@ -309,10 +310,6 @@ class NoteCalcEditor(defaultValue: String,
         data class FunctionDefinition(val name: String, val argumentNames: List<String>,
                                       val tokenLines: List<LineAndTokens>)
 
-
-        init {
-            NoteCalcEditorTest().runTests()
-        }
     }
 }
 

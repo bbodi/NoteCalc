@@ -34,7 +34,7 @@ class NoteCalcEditorTest {
         assertTokenListEq(tokenParser.parse("1/2s"),
                 num(1), op("/"), num(2), unit("s")
         )
-        assertTokenListEq(LineParser().shuntingYard(tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(tokenParser.parse("1/2s")), emptyList()),
+        assertTokenListEq(shuntingYard("1/2s"),
                 num(1), num(2), unit("s"), op("/")
         )
         assertTokenListEq(tokenParser.parse("0b00101 & 0xFF ^ 0xFF00 << 16 >> 16 ! 0xFF"),
@@ -66,11 +66,11 @@ class NoteCalcEditorTest {
                 op("in"),
                 unit("m")
         )
-        assertTokenListEq(tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(tokenParser.parse("12km/h")),
+        assertTokenListEq(tokenListSimplifier.mergeCompoundUnits(tokenParser.parse("12km/h")),
                 num(12),
                 unit("km/h")
         )
-        assertTokenListEq(tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(tokenParser.parse("12km/h*3")),
+        assertTokenListEq(tokenListSimplifier.mergeCompoundUnits(tokenParser.parse("12km/h*3")),
                 num(12),
                 unit("km/h"),
                 op("*"),
@@ -79,7 +79,7 @@ class NoteCalcEditorTest {
         assertTokenListEq(tokenParser.parse("-3"), op("-"), num(3))
         assertTokenListEq(tokenParser.parse("-0xFF"), op("-"), num(255))
         assertTokenListEq(tokenParser.parse("-0b110011"), op("-"), num(51))
-        assertTokenListEq(tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(tokenParser.parse("-3")), op("-"), num(3))
+        assertTokenListEq(tokenListSimplifier.mergeCompoundUnits(tokenParser.parse("-3")), op("-"), num(3))
         assertTokenListEq(tokenParser.parse("-0xFF"), op("-"), num(255))
         assertTokenListEq(tokenParser.parse("-0b110011"), op("-"), num(51))
 
@@ -92,6 +92,7 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(220), "200 + 10%")
         assertEq(Operand.Number(180), "200 - 10%")
         assertEq(Operand.Number(20), "200 * 10%")
+        assertEq(Operand.Percentage(30), "(10 + 20)%")
 
         assertEq(Operand.Number(181.82, NumberType.Float), "10% on what is $200")
         assertEq(Operand.Number(2000), "10% of what is $200")
@@ -136,12 +137,41 @@ class NoteCalcEditorTest {
             val result = LineParser().parseProcessAndEvaulate(listOf("a", "ab"), "ab()", emptyList())!!
             assert.equal(result.parsedTokens.first().asString(), "ab")
         }
+        assertTokenListEq(tokenParser.parse("9-3"),
+                num(9),
+                op("-"),
+                num(3)
+        )
+        assertTokenListEq(tokenParser.parse("200 - 10%"),
+                num(200),
+                op("-"),
+                num(10),
+                op("%")
+        )
+        assertTokenListEq(shuntingYard("-1 + -2"),
+                num(1),
+                op(UNARY_MINUS_TOKEN_SYMBOL),
+                num(2),
+                op(UNARY_MINUS_TOKEN_SYMBOL),
+                op("+")
+        )
+        assertTokenListEq(shuntingYard("-1 - -2"),
+                num(1),
+                op(UNARY_MINUS_TOKEN_SYMBOL),
+                num(2),
+                op(UNARY_MINUS_TOKEN_SYMBOL),
+                op("-")
+        )
+        assertEq(Operand.Number(-3), "-3")
+        assertEq(Operand.Percentage(-30), "-30%")
+        assertEq(Operand.Number(-3), "-1 + -2")
+        assertEq(Operand.Number(1), "-1 - -2")
 
     }
 
     private fun assertEq(expectedValue: String, actualInput: String) {
         QUnit.test(actualInput) { assert ->
-            val actual = TokenListEvaulator().processPostfixNotationStack(LineParser().shuntingYard(tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(tokenParser.parse(actualInput)), emptyList()), emptyMap(), emptyMap())!! as Operand.Quantity
+            val actual = TokenListEvaulator().processPostfixNotationStack(shuntingYard(actualInput), emptyMap(), emptyMap())!! as Operand.Quantity
             assert.ok(MathJs.parseUnitName(expectedValue).equals(actual.quantity),
                     "$expectedValue != $actual")
         }
@@ -150,7 +180,7 @@ class NoteCalcEditorTest {
     private fun assertEq(expectedValue: Operand, actualInput: String) {
         val floatEq = { a: Number, b: Number -> Math.round(a.toDouble() * 100) == Math.round(b.toDouble() * 100) }
         QUnit.test(actualInput) { assert ->
-            val actual = TokenListEvaulator().processPostfixNotationStack(LineParser().shuntingYard(tokenListSimplifier.mergeCompoundUnitsAndUnaryMinusOperators(tokenParser.parse(actualInput)), emptyList()), emptyMap(), emptyMap())!!
+            val actual = TokenListEvaulator().processPostfixNotationStack(shuntingYard(actualInput), emptyMap(), emptyMap())!!
             val ok = when (expectedValue) {
                 is Operand.Number -> actual is Operand.Number && floatEq(actual.num, expectedValue.num)
                 is Operand.Quantity -> actual is Operand.Quantity && actual.quantity.equals(expectedValue.quantity)
@@ -161,7 +191,7 @@ class NoteCalcEditorTest {
     }
 
     private fun assertTokenListEq(actualTokens: List<Token>, vararg expectedTokens: Token) {
-        QUnit.test("") { assert ->
+        QUnit.test(actualTokens.joinToString()) { assert ->
             assert.equal(actualTokens.size, expectedTokens.size)
             expectedTokens.zip(actualTokens).forEach { (expected, actual) ->
                 val ok = when (expected) {
@@ -178,6 +208,8 @@ class NoteCalcEditorTest {
             }
         }
     }
+
+    private fun shuntingYard(actualInput: String) = LineParser().shuntingYard(tokenListSimplifier.mergeCompoundUnits(tokenParser.parse(actualInput)), emptyList())
 
     private fun compareFloats(actual: Token, expected: Token.NumberLiteral, decimalCount: Int) = (expected.num.toFloat() * Math.pow(10.0, decimalCount.toDouble())).toInt() == ((actual as Token.NumberLiteral).num.toFloat() * 100).toInt()
 

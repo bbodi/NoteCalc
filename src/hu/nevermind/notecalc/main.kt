@@ -24,16 +24,18 @@ private const val UNNAMED_TITLE: String = "Unnamed"
 
 fun main(args: Array<String>) {
     QUnit.asDynamic().config.autostart = false
-    if (window.location.search == "?test") {
+    if (window.location.search.startsWith("?test")) {
         QUnit.asDynamic().start()
-    }
-    val allNoteCalcEntries = localStorage.getAllNoteCalcEntries()
-    createNoteCalcEditors(allNoteCalcEntries)
-    if (nextNoteCalcIndex == 0) {
-        localStorage.setNoteCalcTitle(nextNoteCalcIndex, "Welcome")
-        localStorage.setNoteCalcContent(nextNoteCalcIndex, defaultText)
-        localStorage.setNoteCaclcVisibility(nextNoteCalcIndex, "true")
-        addButtonClicked()
+        NoteCalcEditorTest().runTests()
+    } else {
+        val allNoteCalcEntries = localStorage.getAllNoteCalcEntries()
+        createNoteCalcEditors(allNoteCalcEntries)
+        if (nextNoteCalcIndex == 0) {
+            localStorage.setNoteCalcTitle(nextNoteCalcIndex, "Welcome")
+            localStorage.setNoteCalcContent(nextNoteCalcIndex, defaultText)
+            localStorage.setNoteCaclcVisibility(nextNoteCalcIndex, "true")
+            addButtonClicked()
+        }
     }
 }
 
