@@ -173,9 +173,6 @@ providing context for your calculations. Results on the right are automatically
 updated when text changes.
 
 Text is automatically saved in your local browser, nothing is sent to the server.
-You can rename the single NoteCalc editors by clicking on the current name at the
-header of the panel (which is now "Welcome").
-You can create new editors with the "Add" button at the bottom of the page.
 
 Some examples. Feel free to change them and play around.
 
