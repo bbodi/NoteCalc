@@ -208,15 +208,16 @@ ${'$'}prev holds the result of the previous calculation
 all spending = ${'$'}sum
 
 ${'$'}sum always holds the sum of the previous calculations
--- you can reset them with at least two dashes (--) or equal signs (==)
+-- you can reset them with at least two dashes (--) or equal signs (==) at the beginning of a line
 ${'$'}sum is now zero
 
 Units of measure
 ================
 The road took 45minutes and the speed of the vehicle was * 12km/h
-(This is an example that comments can be anywhere in an expressions. The previous line works because
-it is basically a simple multiplication between 45minutes and 12km/h, but there are
-words between the operands and the operator, which, of course, are ignored when calculating the result)
+(This is an example that comments can be anywhere in an expressions.
+The previous line works because it is basically a simple multiplication
+between 45minutes and 12km/h, but there are words between the operands and
+the operator, which, of course, are ignored when calculating the result)
 Downloading a 1GB file with / 10Mb/s in min
 or simply 1GB / 10Mb/s in min
 
