@@ -304,12 +304,10 @@ class NoteCalcEditor(defaultValue: String,
 
         data class HighlightedText(val text: String, val cssClassName: String)
 
-
         data class LineAndTokens(val line: String, val postfixNotationStack: List<Token>)
 
         data class FunctionDefinition(val name: String, val argumentNames: List<String>,
                                       val tokenLines: List<LineAndTokens>)
-
     }
 }
 

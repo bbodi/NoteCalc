@@ -70,21 +70,6 @@ class TokenListEvaulator {
                     } else {
                         quantitativeStack.dropLast(1)
                     }
-                } else if (quantitativeStack.isNotEmpty()) {
-                    val lastTwo = quantitativeStack.takeLast(2)
-                    val lhs = lastTwo[0]
-                    val rhs = lastTwo.getOrNull(1)
-                    val resultOperandAnddropCount = try {
-                        applyOperation(incomingToken.operator, lhs, rhs)
-                    } catch (e: Throwable) {
-                        console.error(e)
-                        null to 0
-                    }
-                    if (resultOperandAnddropCount.first != null) {
-                        quantitativeStack.dropLast(resultOperandAnddropCount.second) + resultOperandAnddropCount.first!!
-                    } else {
-                        quantitativeStack
-                    }
                 } else if (quantitativeStack.isNotEmpty() && incomingToken.operator == "in") {
                     val theQuantityThatWillBeConverted = quantitativeStack.lastOrNull()
                     if (lastUnit != null && theQuantityThatWillBeConverted is Operand.Quantity) {
@@ -98,6 +83,21 @@ class TokenListEvaulator {
                         } else {
                             quantitativeStack
                         }
+                    } else {
+                        quantitativeStack
+                    }
+                } else if (quantitativeStack.isNotEmpty()) {
+                    val lastTwo = quantitativeStack.takeLast(2)
+                    val lhs = lastTwo[0]
+                    val rhs = lastTwo.getOrNull(1)
+                    val resultOperandAnddropCount = try {
+                        applyOperation(incomingToken.operator, lhs, rhs)
+                    } catch (e: Throwable) {
+                        console.error(e)
+                        null to 0
+                    }
+                    if (resultOperandAnddropCount.first != null) {
+                        quantitativeStack.dropLast(resultOperandAnddropCount.second) + resultOperandAnddropCount.first!!
                     } else {
                         quantitativeStack
                     }

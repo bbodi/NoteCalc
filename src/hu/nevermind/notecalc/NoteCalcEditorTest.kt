@@ -190,7 +190,7 @@ class NoteCalcEditorTest {
         QUnit.test(actualInput) { assert ->
             val actual = TokenListEvaulator().processPostfixNotationStack(shuntingYard(actualInput), emptyMap(), emptyMap())!! as Operand.Quantity
             assert.ok(MathJs.parseUnitName(expectedValue).equals(actual.quantity),
-                    "$expectedValue != $actual")
+                    "$expectedValue != ${actual.quantity}")
         }
     }
 

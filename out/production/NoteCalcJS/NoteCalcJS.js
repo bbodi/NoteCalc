@@ -1449,7 +1449,7 @@ var NoteCalcJS = function (_, Kotlin) {
     return function (assert) {
       var tmp$, tmp$_0;
       var actual = Kotlin.isType(tmp$_0 = (tmp$ = (new TokenListEvaulator()).processPostfixNotationStack_h27eq8$(this$NoteCalcEditorTest.shuntingYard_0(closure$actualInput), emptyMap(), emptyMap())) != null ? tmp$ : Kotlin.throwNPE(), Operand$Quantity) ? tmp$_0 : Kotlin.throwCCE();
-      assert.ok(math.unit(closure$expectedValue).equals(actual.quantity), closure$expectedValue + ' != ' + actual);
+      assert.ok(math.unit(closure$expectedValue).equals(actual.quantity), closure$expectedValue + ' != ' + actual.quantity);
     };
   }
   NoteCalcEditorTest.prototype.assertEq_0 = function (expectedValue, actualInput) {
@@ -1922,50 +1922,50 @@ var NoteCalcJS = function (_, Kotlin) {
           }
         }
          else {
-          if (!quantitativeStack.isEmpty()) {
-            var lastTwo = takeLast(quantitativeStack, 2);
-            var lhs = lastTwo.get_za3lpa$(0);
-            var rhs = getOrNull(lastTwo, 1);
-            try {
-              tmp$ = this.applyOperation_0(incomingToken.operator, lhs, rhs);
-            }
-             catch (e) {
-              if (Kotlin.isType(e, Throwable)) {
-                console.error(e);
-                tmp$ = to(null, 0);
+          if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, 'in')) {
+            var theQuantityThatWillBeConverted = lastOrNull(quantitativeStack);
+            if (lastUnit_0 != null && Kotlin.isType(theQuantityThatWillBeConverted, Operand$Quantity)) {
+              try {
+                tmp$ = theQuantityThatWillBeConverted.quantity.to(lastUnit_0);
               }
-               else
-                throw e;
-            }
-            var resultOperandAnddropCount = tmp$;
-            if (resultOperandAnddropCount.first != null) {
-              tmp$_2 = plus(dropLast(quantitativeStack, resultOperandAnddropCount.second), (tmp$_0 = resultOperandAnddropCount.first) != null ? tmp$_0 : Kotlin.throwNPE());
+               catch (e) {
+                if (Kotlin.isType(e, Throwable)) {
+                  tmp$ = null;
+                }
+                 else
+                  throw e;
+              }
+              var convertedQuantity = tmp$;
+              if (convertedQuantity != null) {
+                tmp$_2 = plus(dropLast(quantitativeStack, 1), new Operand$Quantity(convertedQuantity, theQuantityThatWillBeConverted.type));
+              }
+               else {
+                tmp$_2 = quantitativeStack;
+              }
             }
              else {
               tmp$_2 = quantitativeStack;
             }
           }
            else {
-            if (!quantitativeStack.isEmpty() && Kotlin.equals(incomingToken.operator, 'in')) {
-              var theQuantityThatWillBeConverted = lastOrNull(quantitativeStack);
-              if (lastUnit_0 != null && Kotlin.isType(theQuantityThatWillBeConverted, Operand$Quantity)) {
-                try {
-                  tmp$_1 = theQuantityThatWillBeConverted.quantity.to(lastUnit_0);
+            if (!quantitativeStack.isEmpty()) {
+              var lastTwo = takeLast(quantitativeStack, 2);
+              var lhs = lastTwo.get_za3lpa$(0);
+              var rhs = getOrNull(lastTwo, 1);
+              try {
+                tmp$_0 = this.applyOperation_0(incomingToken.operator, lhs, rhs);
+              }
+               catch (e) {
+                if (Kotlin.isType(e, Throwable)) {
+                  console.error(e);
+                  tmp$_0 = to(null, 0);
                 }
-                 catch (e) {
-                  if (Kotlin.isType(e, Throwable)) {
-                    tmp$_1 = null;
-                  }
-                   else
-                    throw e;
-                }
-                var convertedQuantity = tmp$_1;
-                if (convertedQuantity != null) {
-                  tmp$_2 = plus(dropLast(quantitativeStack, 1), new Operand$Quantity(convertedQuantity, theQuantityThatWillBeConverted.type));
-                }
-                 else {
-                  tmp$_2 = quantitativeStack;
-                }
+                 else
+                  throw e;
+              }
+              var resultOperandAnddropCount = tmp$_0;
+              if (resultOperandAnddropCount.first != null) {
+                tmp$_2 = plus(dropLast(quantitativeStack, resultOperandAnddropCount.second), (tmp$_1 = resultOperandAnddropCount.first) != null ? tmp$_1 : Kotlin.throwNPE());
               }
                else {
                 tmp$_2 = quantitativeStack;
@@ -2855,7 +2855,7 @@ var NoteCalcJS = function (_, Kotlin) {
   NOTE_CALC_IDS_KEY = 'commaSeparatedNoteCaclcIds';
   UNNAMED_TITLE = 'Unnamed';
   addButtonClicked = addButtonClicked$lambda;
-  defaultText = '==========================================================\n========================== Welcome =======================\n==========================================================\n\nNotecalc is a handy calculator trying to bring the advantages of Soulver\nto the web.\n\nYou can use it as a combination of a calculator and a notepad, mixing calculations,\nnumbers, operators, units of measurement with meaningful, descriptive texts around them,\nproviding context for your calculations. Results on the right are automatically\nupdated when text changes.\n\nText is automatically saved in your local browser, nothing is sent to the server.\nYou can rename the single NoteCalc editors by clicking on the current name at the\nheader of the panel (which is now "Welcome").\nYou can create new editors with the "Add" button at the bottom of the page.\n\nSome examples. Feel free to change them and play around.\n\nPercentages\n===========\n100 + 10%\n200 * 5%\n200 - 20%\n\nNumbers, Hex and binary digits\n==============================\nYou don\'t have to count zeros\n100k\n10M\nspace separated numbers 10 000 000\nBinary and Hex numbers\n0xFF\n0b1100 + 0b0011\n\nVariables\n=========\nBank of America = 50 000 + 5.25%\nCitibank = 50 000 + 6%\nDifference of Citibank - Bank of America\n$prev * 3 years\n$prev holds the result of the previous calculation\n--\n12$ for beer\n2*13$ for tickets\nall spending = $sum\n\n$sum always holds the sum of the previous calculations\n-- you can reset them with at least two dashes (--) or equal signs (==)\n$sum is now zero\n\nUnits of measure\n================\nThe road took 45minutes and the speed of the vehicle was * 12km/h\n(This is an example that comments can be anywhere in an expressions. The previous line works because\nit is basically a simple multiplication between 45minutes and 12km/h, but there are\nwords between the operands and the operator, which, of course, are ignored when calculating the result)\nDownloading a 1GB file with / 10Mb/s in min\nor simply 1GB / 10Mb/s in min\n\nConversions\n===========\n11years in weeks\n1 day in seconds\n12 km/h in m/s\n5m*m/s in km*km/h\n\n\nMethods\n=======\nMethods are defined at the start of the line with a "fun" keyword and a method name.\nMethod name should not contain any space or special characters.\nEvery line starting with a whitespace character after the method name is the body of the method.\n\nfun motion(time)\n  a = (0 - 9.8)m/s^2\n  v0 = 100 m/s\n  x0 = 490 m\n  1/2 * a * time^2 + v0 * time + x0\n\nmotion(1s)\nmotion(10s)\nmotion(20s)\nmotion(30s)';
+  defaultText = '==========================================================\n========================== Welcome =======================\n==========================================================\n\nNotecalc is a handy calculator trying to bring the advantages of Soulver\nto the web.\n\nYou can use it as a combination of a calculator and a notepad, mixing calculations,\nnumbers, operators, units of measurement with meaningful, descriptive texts around them,\nproviding context for your calculations. Results on the right are automatically\nupdated when text changes.\n\nText is automatically saved in your local browser, nothing is sent to the server.\nYou can rename the single NoteCalc editors by clicking on the current name at the\nheader of the panel (which is now "Welcome").\nYou can create new editors with the "Add" button at the bottom of the page.\n\nSome examples. Feel free to change them and play around.\n\nPercentages\n===========\n100 + 10%\n200 * 5%\n200 - 20%\n\nNumbers, Hex and binary digits\n==============================\nYou don\'t have to count zeros\n100k\n10M\nspace separated numbers 10 000 000\nBinary and Hex numbers\n0xFF\n0b1100 + 0b0011\n\nVariables\n=========\nBank of America = 50 000 + 5.25%\nCitibank = 50 000 + 6%\nDifference of Citibank - Bank of America\n$prev * 3 years\n$prev holds the result of the previous calculation\n--\n12$ for beer\n2*13$ for tickets\nall spending = $sum\n\n$sum always holds the sum of the previous calculations\n-- you can reset them with at least two dashes (--) or equal signs (==) at the beginning of a line\n$sum is now zero\n\nUnits of measure\n================\nThe road took 45minutes and the speed of the vehicle was * 12km/h\n(This is an example that comments can be anywhere in an expressions.\nThe previous line works because it is basically a simple multiplication\nbetween 45minutes and 12km/h, but there are words between the operands and\nthe operator, which, of course, are ignored when calculating the result)\nDownloading a 1GB file with / 10Mb/s in min\nor simply 1GB / 10Mb/s in min\n\nConversions\n===========\n11years in weeks\n1 day in seconds\n12 km/h in m/s\n5m*m/s in km*km/h\n\n\nMethods\n=======\nMethods are defined at the start of the line with a "fun" keyword and a method name.\nMethod name should not contain any space or special characters.\nEvery line starting with a whitespace character after the method name is the body of the method.\n\nfun motion(time)\n  a = (0 - 9.8)m/s^2\n  v0 = 100 m/s\n  x0 = 490 m\n  1/2 * a * time^2 + v0 * time + x0\n\nmotion(1s)\nmotion(10s)\nmotion(20s)\nmotion(30s)';
   Kotlin.defineModule('NoteCalcJS', _);
   main([]);
   return _;
