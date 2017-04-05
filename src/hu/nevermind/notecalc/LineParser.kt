@@ -1,6 +1,7 @@
 package hu.nevermind.notecalc
 
 const val UNARY_MINUS_TOKEN_SYMBOL: String = "unary-"
+const val UNARY_PLUS_TOKEN_SYMBOL: String = "unary+"
 
 class LineParser {
 
@@ -47,16 +48,9 @@ class LineParser {
                         val modifiedStacksAfterBracketRule = popAnythingUntilOpeningBracket(operatorStack, output)
                         modifiedStacksAfterBracketRule
                     } else if (inputToken.operator == "-") {
-                        if (lastToken == null || (lastToken is Token.Operator && lastToken.operator != ")")) {
-                            ShuntingYardStacks(operatorStack + Token.Operator(UNARY_MINUS_TOKEN_SYMBOL), output)
-                        } else {
-                            val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
-                            ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
-                        }
+                        handleUnaryOperator(inputToken, lastToken, operatorStack, output, UNARY_MINUS_TOKEN_SYMBOL)
                     } else if (inputToken.operator == "+") {
-                        val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
-                        ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
-
+                        handleUnaryOperator(inputToken, lastToken, operatorStack, output, UNARY_PLUS_TOKEN_SYMBOL)
                     } else {
                         val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
                         ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
@@ -79,6 +73,15 @@ class LineParser {
                 is Token.Variable -> ShuntingYardStacks(operatorStack, output + inputToken)
             }
             return shuntingYardRec(inputTokens.drop(1), newOperatorStack, newOutput, functionNames, inputToken)
+        }
+    }
+
+    private fun handleUnaryOperator(inputToken: Token.Operator, lastToken: Token?, operatorStack: List<Token.Operator>, output: List<Token>, unaryOperatorSymbol: String): ShuntingYardStacks {
+        return if (lastToken == null || (lastToken is Token.Operator && lastToken.operator !in ")%")) {
+            ShuntingYardStacks(operatorStack + Token.Operator(unaryOperatorSymbol), output)
+        } else {
+            val (newOperatorStack, newOutput) = shuntingYardOperatorRule(operatorStack, output, inputToken.operator)
+            ShuntingYardStacks(newOperatorStack + inputToken, newOutput)
         }
     }
 
@@ -141,7 +144,7 @@ class LineParser {
             "+" to OperatorInfo(2, "left") { operator, outputStack -> outputStack + operator },
             "-" to OperatorInfo(2, "left") { operator, outputStack -> outputStack + operator },
             UNARY_MINUS_TOKEN_SYMBOL to OperatorInfo(4, "left") { operator, outputStack -> outputStack + operator },
-            "unary+" to OperatorInfo(4, "left") { operator, outputStack -> outputStack + operator },
+            UNARY_PLUS_TOKEN_SYMBOL to OperatorInfo(4, "left") { operator, outputStack -> outputStack + operator },
             "*" to OperatorInfo(3, "left") { operator, outputStack ->
                 val (lhs, rhs) = getTopTwoElements(outputStack)
                 if (lhs is Token.UnitOfMeasure && rhs is Token.UnitOfMeasure) {

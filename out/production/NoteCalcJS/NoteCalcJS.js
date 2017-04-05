@@ -194,10 +194,11 @@ var NoteCalcJS = function (_, Kotlin) {
     return CodeMirrorWrapper_instance;
   }
   var UNARY_MINUS_TOKEN_SYMBOL;
+  var UNARY_PLUS_TOKEN_SYMBOL;
   function LineParser() {
     this.tokenParser_0 = new TokenParser();
     this.tokenListSimplifier_0 = new TokenListSimplifier();
-    this.operatorInfosForUnits_0 = hashMapOf([to('%', new LineParser$OperatorInfo(6, 'left', LineParser$operatorInfosForUnits$lambda)), to('^', new LineParser$OperatorInfo(5, 'right', LineParser$operatorInfosForUnits$lambda_0(this))), to('unit', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_1)), to('=', new LineParser$OperatorInfo(0, 'left', LineParser$operatorInfosForUnits$lambda_2)), to('+', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_3)), to('-', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_4)), to(UNARY_MINUS_TOKEN_SYMBOL, new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_5)), to('unary+', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_6)), to('*', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_7(this))), to('/', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_8(this)))]);
+    this.operatorInfosForUnits_0 = hashMapOf([to('%', new LineParser$OperatorInfo(6, 'left', LineParser$operatorInfosForUnits$lambda)), to('^', new LineParser$OperatorInfo(5, 'right', LineParser$operatorInfosForUnits$lambda_0(this))), to('unit', new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_1)), to('=', new LineParser$OperatorInfo(0, 'left', LineParser$operatorInfosForUnits$lambda_2)), to('+', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_3)), to('-', new LineParser$OperatorInfo(2, 'left', LineParser$operatorInfosForUnits$lambda_4)), to(UNARY_MINUS_TOKEN_SYMBOL, new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_5)), to(UNARY_PLUS_TOKEN_SYMBOL, new LineParser$OperatorInfo(4, 'left', LineParser$operatorInfosForUnits$lambda_6)), to('*', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_7(this))), to('/', new LineParser$OperatorInfo(3, 'left', LineParser$operatorInfosForUnits$lambda_8(this)))]);
   }
   LineParser.prototype.parseProcessAndEvaulate_0 = function (functionNames, line, variableNames) {
     var tmp$;
@@ -234,7 +235,7 @@ var NoteCalcJS = function (_, Kotlin) {
     return accumulator;
   };
   LineParser.prototype.shuntingYardRec_0 = function (inputTokens, operatorStack, output, functionNames, lastToken) {
-    var tmp$_2;
+    var tmp$_0;
     if (inputTokens.isEmpty()) {
       return new LineParser$ShuntingYardStacks(operatorStack, output);
     }
@@ -242,60 +243,62 @@ var NoteCalcJS = function (_, Kotlin) {
       var inputToken = first(inputTokens);
       if (Kotlin.isType(inputToken, Token$Operator))
         if (Kotlin.equals(inputToken.operator, '(')) {
-          tmp$_2 = new LineParser$ShuntingYardStacks(plus(operatorStack, inputToken), output);
+          tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, inputToken), output);
         }
          else if (Kotlin.equals(inputToken.operator, ')')) {
           var modifiedStacksAfterBracketRule = this.popAnythingUntilOpeningBracket_0(operatorStack, output);
-          tmp$_2 = modifiedStacksAfterBracketRule;
+          tmp$_0 = modifiedStacksAfterBracketRule;
         }
          else if (Kotlin.equals(inputToken.operator, '-')) {
-          if (lastToken == null || (Kotlin.isType(lastToken, Token$Operator) && !Kotlin.equals(lastToken.operator, ')'))) {
-            tmp$_2 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator(UNARY_MINUS_TOKEN_SYMBOL)), output);
-          }
-           else {
-            var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
-            , newOperatorStack = tmp$.component1()
-            , newOutput = tmp$.component2();
-            tmp$_2 = new LineParser$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
-          }
+          tmp$_0 = this.handleUnaryOperator_0(inputToken, lastToken, operatorStack, output, UNARY_MINUS_TOKEN_SYMBOL);
         }
          else if (Kotlin.equals(inputToken.operator, '+')) {
-          var tmp$_0 = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
-          , newOperatorStack_0 = tmp$_0.component1()
-          , newOutput_0 = tmp$_0.component2();
-          tmp$_2 = new LineParser$ShuntingYardStacks(plus(newOperatorStack_0, inputToken), newOutput_0);
+          tmp$_0 = this.handleUnaryOperator_0(inputToken, lastToken, operatorStack, output, UNARY_PLUS_TOKEN_SYMBOL);
         }
          else {
-          var tmp$_1 = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
-          , newOperatorStack_1 = tmp$_1.component1()
-          , newOutput_1 = tmp$_1.component2();
-          tmp$_2 = new LineParser$ShuntingYardStacks(plus(newOperatorStack_1, inputToken), newOutput_1);
+          var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
+          , newOperatorStack = tmp$.component1()
+          , newOutput = tmp$.component2();
+          tmp$_0 = new LineParser$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
         }
        else if (Kotlin.isType(inputToken, Token$NumberLiteral))
-        tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
       else if (Kotlin.isType(inputToken, Token$StringLiteral))
         if (contains_0(functionNames, inputToken.str)) {
-          tmp$_2 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator('fun ' + inputToken.str)), plus(output, inputToken));
+          tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator('fun ' + inputToken.str)), plus(output, inputToken));
         }
          else if (Kotlin.equals(inputToken.str, ',')) {
-          tmp$_2 = this.shuntingYardOperatorRule_0(operatorStack, output, ',');
+          tmp$_0 = this.shuntingYardOperatorRule_0(operatorStack, output, ',');
         }
          else {
-          tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+          tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
         }
        else if (Kotlin.isType(inputToken, Token$UnitOfMeasure)) {
         this.shuntingYardOperatorRule_0(operatorStack, output, 'unit');
-        tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
       }
        else if (Kotlin.isType(inputToken, Token$Variable))
-        tmp$_2 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
+        tmp$_0 = new LineParser$ShuntingYardStacks(operatorStack, plus(output, inputToken));
       else
-        tmp$_2 = Kotlin.noWhenBranchMatched();
-      var tmp$_3 = tmp$_2
-      , newOperatorStack_2 = tmp$_3.component1()
-      , newOutput_2 = tmp$_3.component2();
-      return this.shuntingYardRec_0(drop(inputTokens, 1), newOperatorStack_2, newOutput_2, functionNames, inputToken);
+        tmp$_0 = Kotlin.noWhenBranchMatched();
+      var tmp$_1 = tmp$_0
+      , newOperatorStack_0 = tmp$_1.component1()
+      , newOutput_0 = tmp$_1.component2();
+      return this.shuntingYardRec_0(drop(inputTokens, 1), newOperatorStack_0, newOutput_0, functionNames, inputToken);
     }
+  };
+  LineParser.prototype.handleUnaryOperator_0 = function (inputToken, lastToken, operatorStack, output, unaryOperatorSymbol) {
+    var tmp$_0;
+    if (lastToken == null || (Kotlin.isType(lastToken, Token$Operator) && !contains(')%', lastToken.operator))) {
+      tmp$_0 = new LineParser$ShuntingYardStacks(plus(operatorStack, new Token$Operator(unaryOperatorSymbol)), output);
+    }
+     else {
+      var tmp$ = this.shuntingYardOperatorRule_0(operatorStack, output, inputToken.operator)
+      , newOperatorStack = tmp$.component1()
+      , newOutput = tmp$.component2();
+      tmp$_0 = new LineParser$ShuntingYardStacks(plus(newOperatorStack, inputToken), newOutput);
+    }
+    return tmp$_0;
   };
   function LineParser$ShuntingYardStacks(operatorStack, output) {
     this.operatorStack = operatorStack;
@@ -693,7 +696,7 @@ var NoteCalcJS = function (_, Kotlin) {
     $receiver.className = 'col-xs-12 col-md-12';
     var panelTitle = (tmp$_0 = getNoteCalcTitle(localStorage, editorIndex)) != null ? tmp$_0 : '';
     window['onTitleClick' + editorIndex] = addNewEditorRow$lambda$lambda(editorIndex, panelTitle);
-    $receiver.innerHTML = '\n' + '<div class=' + '"' + 'panel panel-default' + '"' + '>' + '\n' + '  <div class=' + '"' + 'panel-heading' + '"' + '>' + '\n' + '    <h3 class=' + '"' + 'panel-title pull-left' + '"' + ' onclick=' + '"' + 'onTitleClick' + editorIndex + '()' + '"' + '>' + panelTitle + '<\/h3>' + '\n' + '    <button class=' + '"' + 'btn btn-default pull-right' + '"' + ' onclick=' + '"' + 'onHideButtonClick' + editorIndex + '(false)' + '"' + '>Hide<\/button>' + '\n' + '    <div class=' + '"' + 'clearfix' + '"' + '><\/div>' + '\n' + '  <\/div>' + '\n' + '  <div class=' + '"' + 'panel-body' + '"' + '>' + '\n' + '    <div class=' + '"' + 'row' + '"' + '>' + '\n' + '        <div class=' + '"' + 'col-xs-6' + '"' + ' style=' + '"' + 'padding-right: 0px;padding-left: 0px;' + '"' + '>' + '\n' + '            <textarea id=' + '"' + 'textarea' + editorIndex + '"' + '  style=' + '"' + 'width: 100%;height: 100%' + '"' + '><\/textarea>' + '\n' + '        <\/div>' + '\n' + '        <div class=' + '"' + 'col-xs-6' + '"' + ' style=' + '"' + 'padding-right: 0px;padding-left: 0px;' + '"' + '>' + '\n' + '            <textarea id=' + '"' + 'results' + editorIndex + '"' + ' class=' + '"' + 'CodeMirror-code' + '"' + ' style=' + '"' + 'margin-top: 0px; font-family: monospace;' + '"' + '><\/textarea>' + '\n' + '        <\/div>' + '\n' + '    <\/div>' + '\n' + '  <\/div>' + '\n' + '<\/div>' + '\n';
+    $receiver.innerHTML = '\n' + '<div class=' + '"' + 'panel panel-default' + '"' + '>' + '\n' + '  <div class=' + '"' + 'panel-heading' + '"' + '>' + '\n' + '    <h3 class=' + '"' + 'panel-title pull-left' + '"' + ' onclick=' + '"' + 'onTitleClick' + editorIndex + '()' + '"' + '>' + panelTitle + '<\/h3>' + '\n' + '    <!--button class=' + '"' + 'btn btn-default pull-right' + '"' + ' onclick=' + '"' + 'onHideButtonClick' + editorIndex + '(false)' + '"' + '>Hide<\/button-->' + '\n' + '    <div class=' + '"' + 'clearfix' + '"' + '><\/div>' + '\n' + '  <\/div>' + '\n' + '  <div class=' + '"' + 'panel-body' + '"' + '>' + '\n' + '    <div class=' + '"' + 'row' + '"' + '>' + '\n' + '        <div class=' + '"' + 'col-xs-6' + '"' + ' style=' + '"' + 'padding-right: 0px;padding-left: 0px;' + '"' + '>' + '\n' + '            <textarea id=' + '"' + 'textarea' + editorIndex + '"' + '  style=' + '"' + 'width: 100%;height: 100%' + '"' + '><\/textarea>' + '\n' + '        <\/div>' + '\n' + '        <div class=' + '"' + 'col-xs-6' + '"' + ' style=' + '"' + 'padding-right: 0px;padding-left: 0px;' + '"' + '>' + '\n' + '            <textarea id=' + '"' + 'results' + editorIndex + '"' + ' class=' + '"' + 'CodeMirror-code' + '"' + ' style=' + '"' + 'margin-top: 0px; font-family: monospace;' + '"' + '><\/textarea>' + '\n' + '        <\/div>' + '\n' + '    <\/div>' + '\n' + '  <\/div>' + '\n' + '<\/div>' + '\n';
     var newRow = $receiver;
     ((tmp$ = document.getElementById('noteCalcTable')) != null ? tmp$ : Kotlin.throwNPE()).appendChild(newRow);
     return window.setTimeout(addNewEditorRow$lambda(editorIndex, globalVariables_0), 500);
@@ -1398,6 +1401,7 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(15), '(1 alma + 4 k\xF6rte) * 3 ember');
     this.assertEq_1(new Operand$Percentage(5), '10 as a % of 200');
     this.assertEq_1(new Operand$Percentage(30), '10% + 20%');
+    this.assertEq_1(new Operand$Percentage(20), '30% - 10%');
     this.assertEq_1(new Operand$Number(220), '200 + 10%');
     this.assertEq_1(new Operand$Number(180), '200 - 10%');
     this.assertEq_1(new Operand$Number(20), '200 * 10%');
@@ -1405,6 +1409,7 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(181.82, NumberType$Float_getInstance()), '10% on what is $200');
     this.assertEq_1(new Operand$Number(2000), '10% of what is $200');
     this.assertEq_1(new Operand$Number(222.22, NumberType$Float_getInstance()), '10% off what is $200');
+    this.assertTokenListEq_0(this.shuntingYard_0('30% - 10%'), [num(30), op('%'), num(10), op('%'), op('-')]);
     this.assertTokenListEq_0(this.tokenParser_0.parse_0('I traveled with 45km/h for / 13km in min'), [str('I'), str('traveled'), str('with'), num(45), unit('km'), op('/'), unit('h'), str('for'), op('/'), num(13), unit('km'), op('in'), unit('min')]);
     this.assertEq_0('19.5 min', 'I traveled 13km / at a rate 40km/h in min');
     this.assertEq_0('12 mile/h', 'I traveled 24 miles and rode my bike  / 2 hours');
@@ -1429,7 +1434,16 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(-3), '-3');
     this.assertEq_1(new Operand$Percentage(-30), '-30%');
     this.assertEq_1(new Operand$Number(-3), '-1 + -2');
+    this.assertEq_1(new Operand$Number(1), '(-1) - (-2)');
+    this.assertEq_1(new Operand$Number(1), '-1 - -(2)');
     this.assertEq_1(new Operand$Number(1), '-1 - -2');
+    this.assertEq_1(new Operand$Number(3), '+3');
+    this.assertEq_1(new Operand$Number(6), '+3 + +3');
+    this.assertEq_1(new Operand$Number(1), '+3 - +2');
+    this.assertEq_1(new Operand$Number(5), '+3 - -2');
+    this.assertEq_1(new Operand$Number(-3), '+(-(+(3)))');
+    this.assertEq_1(new Operand$Number(3), '+-+-3');
+    this.assertEq_1(new Operand$Number(-3), '-+-+-3');
   };
   function NoteCalcEditorTest$assertEq$lambda(closure$actualInput, this$NoteCalcEditorTest, closure$expectedValue) {
     return function (assert) {
@@ -1458,7 +1472,7 @@ var NoteCalcJS = function (_, Kotlin) {
       else
         tmp$_1 = Kotlin.noWhenBranchMatched();
       var ok = tmp$_1;
-      assert.ok(ok, closure$expectedValue.asString() + ' != ' + actual.asString());
+      assert.ok(ok, 'expected(' + closure$expectedValue.asString() + ') != actual(' + actual.asString() + ')');
     };
   }
   NoteCalcEditorTest.prototype.assertEq_1 = function (expectedValue, actualInput) {
@@ -1467,7 +1481,7 @@ var NoteCalcJS = function (_, Kotlin) {
   };
   function NoteCalcEditorTest$assertTokenListEq$lambda(closure$actualTokens, closure$expectedTokens, this$NoteCalcEditorTest) {
     return function (assert) {
-      assert.equal(closure$actualTokens.size, closure$expectedTokens.length);
+      assert.equal(closure$actualTokens.size, closure$expectedTokens.length, 'token count');
       var $receiver = zip(closure$expectedTokens, closure$actualTokens);
       var tmp$;
       tmp$ = $receiver.iterator();
@@ -1996,6 +2010,8 @@ var NoteCalcJS = function (_, Kotlin) {
         tmp$ = to(this.minusOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, UNARY_MINUS_TOKEN_SYMBOL))
         tmp$ = to(this.unaryMinusOperator_0(rhs != null ? rhs : lhs), 1);
+      else if (Kotlin.equals(operator, UNARY_PLUS_TOKEN_SYMBOL))
+        tmp$ = to(this.unaryPlusOperator_0(rhs != null ? rhs : lhs), 1);
       else if (Kotlin.equals(operator, '^'))
         tmp$ = to(this.powerOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else
@@ -2052,6 +2068,18 @@ var NoteCalcJS = function (_, Kotlin) {
       tmp$ = Kotlin.noWhenBranchMatched();
     return tmp$;
   };
+  TokenListEvaulator.prototype.unaryPlusOperator_0 = function (operand) {
+    var tmp$;
+    if (Kotlin.isType(operand, Operand$Number))
+      tmp$ = operand.copy_eilmgh$(+Kotlin.numberToDouble(operand.num));
+    else if (Kotlin.isType(operand, Operand$Quantity))
+      tmp$ = operand.copy_zans0s$(operand.quantity);
+    else if (Kotlin.isType(operand, Operand$Percentage))
+      tmp$ = operand.copy_eilmgh$(+Kotlin.numberToDouble(operand.num));
+    else
+      tmp$ = Kotlin.noWhenBranchMatched();
+    return tmp$;
+  };
   TokenListEvaulator.prototype.minusOperator_0 = function (lhs, rhs) {
     var tmp$;
     if (Kotlin.isType(lhs, Operand$Number)) {
@@ -2076,9 +2104,17 @@ var NoteCalcJS = function (_, Kotlin) {
       else
         tmp$ = Kotlin.noWhenBranchMatched();
     }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
+     else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = new Operand$Percentage(Kotlin.numberToDouble(lhs.num) - Kotlin.numberToDouble(rhs.num), lhs.type);
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
       tmp$ = Kotlin.noWhenBranchMatched();
     return tmp$;
   };
@@ -2768,6 +2804,11 @@ var NoteCalcJS = function (_, Kotlin) {
       return UNARY_MINUS_TOKEN_SYMBOL;
     }
   });
+  Object.defineProperty(package$notecalc, 'UNARY_PLUS_TOKEN_SYMBOL', {
+    get: function () {
+      return UNARY_PLUS_TOKEN_SYMBOL;
+    }
+  });
   LineParser.ShuntingYardStacks = LineParser$ShuntingYardStacks;
   LineParser.OperatorInfo = LineParser$OperatorInfo;
   package$notecalc.LineParser = LineParser;
@@ -2808,6 +2849,7 @@ var NoteCalcJS = function (_, Kotlin) {
   package$notecalc.TokenListSimplifier = TokenListSimplifier;
   package$notecalc.TokenParser = TokenParser;
   UNARY_MINUS_TOKEN_SYMBOL = 'unary-';
+  UNARY_PLUS_TOKEN_SYMBOL = 'unary+';
   nextNoteCalcIndex = 0;
   globalVariables = Kotlin.kotlin.collections.HashMap_init_q3lmfv$();
   NOTE_CALC_IDS_KEY = 'commaSeparatedNoteCaclcIds';

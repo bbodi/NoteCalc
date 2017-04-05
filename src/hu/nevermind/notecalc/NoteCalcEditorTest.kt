@@ -89,6 +89,7 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(15), "(1 alma + 4 körte) * 3 ember")
         assertEq(Operand.Percentage(5), "10 as a % of 200")
         assertEq(Operand.Percentage(30), "10% + 20%")
+        assertEq(Operand.Percentage(20), "30% - 10%")
         assertEq(Operand.Number(220), "200 + 10%")
         assertEq(Operand.Number(180), "200 - 10%")
         assertEq(Operand.Number(20), "200 * 10%")
@@ -97,6 +98,14 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(181.82, NumberType.Float), "10% on what is $200")
         assertEq(Operand.Number(2000), "10% of what is $200")
         assertEq(Operand.Number(222.22, NumberType.Float), "10% off what is $200")
+
+        assertTokenListEq(shuntingYard("30% - 10%"),
+                num(30),
+                op("%"),
+                num(10),
+                op("%"),
+                op("-")
+        )
 
         assertTokenListEq(tokenParser.parse("I traveled with 45km/h for / 13km in min"),
                 str("I"),
@@ -165,8 +174,16 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(-3), "-3")
         assertEq(Operand.Percentage(-30), "-30%")
         assertEq(Operand.Number(-3), "-1 + -2")
+        assertEq(Operand.Number(1), "(-1) - (-2)")
+        assertEq(Operand.Number(1), "-1 - -(2)")
         assertEq(Operand.Number(1), "-1 - -2")
-
+        assertEq(Operand.Number(3), "+3")
+        assertEq(Operand.Number(6), "+3 + +3")
+        assertEq(Operand.Number(1), "+3 - +2")
+        assertEq(Operand.Number(5), "+3 - -2")
+        assertEq(Operand.Number(-3), "+(-(+(3)))")
+        assertEq(Operand.Number(3), "+-+-3")
+        assertEq(Operand.Number(-3), "-+-+-3")
     }
 
     private fun assertEq(expectedValue: String, actualInput: String) {
@@ -186,13 +203,13 @@ class NoteCalcEditorTest {
                 is Operand.Quantity -> actual is Operand.Quantity && actual.quantity.equals(expectedValue.quantity)
                 is Operand.Percentage -> actual is Operand.Percentage && floatEq(actual.num, expectedValue.num)
             }
-            assert.ok(ok, "${expectedValue.asString()} != ${actual.asString()}")
+            assert.ok(ok, "expected(${expectedValue.asString()}) != actual(${actual.asString()})")
         }
     }
 
     private fun assertTokenListEq(actualTokens: List<Token>, vararg expectedTokens: Token) {
         QUnit.test(actualTokens.joinToString()) { assert ->
-            assert.equal(actualTokens.size, expectedTokens.size)
+            assert.equal(actualTokens.size, expectedTokens.size, "token count")
             expectedTokens.zip(actualTokens).forEach { (expected, actual) ->
                 val ok = when (expected) {
                     is Token.NumberLiteral -> {

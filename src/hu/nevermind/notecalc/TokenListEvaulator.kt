@@ -130,6 +130,7 @@ class TokenListEvaulator {
                 "+" -> plusOperator(lhs, rhs!!) to 2
                 "-" -> minusOperator(lhs, rhs!!) to 2
                 UNARY_MINUS_TOKEN_SYMBOL -> unaryMinusOperator(rhs ?: lhs) to 1
+                UNARY_PLUS_TOKEN_SYMBOL -> unaryPlusOperator(rhs ?: lhs) to 1
                 "^" -> powerOperator(lhs, rhs!!) to 2
                 else -> null to 0
             }
@@ -164,6 +165,13 @@ class TokenListEvaulator {
         }
     }
 
+    private fun unaryPlusOperator(operand: Operand): Operand? {
+        return when (operand) {
+            is Operand.Number -> operand.copy(num = +operand.num.toDouble())
+            is Operand.Quantity -> operand.copy(quantity = operand.quantity)
+            is Operand.Percentage -> operand.copy(num = +operand.num.toDouble())
+        }
+    }
 
     private fun minusOperator(lhs: Operand, rhs: Operand): Operand? {
         return when (lhs) {
@@ -180,7 +188,11 @@ class TokenListEvaulator {
                 is Operand.Number -> null
                 is Operand.Percentage -> null
             }
-            is Operand.Percentage -> null
+            is Operand.Percentage -> when (rhs) {
+                is Operand.Quantity -> null
+                is Operand.Number -> null
+                is Operand.Percentage -> Operand.Percentage(lhs.num.toDouble() - rhs.num.toDouble(), lhs.type)
+            }
         }
     }
 
@@ -217,15 +229,12 @@ class TokenListEvaulator {
                     Operand.Number(x, lhs.type)
                 }
             }
-
             is Operand.Quantity -> when (rhs) {
                 is Operand.Quantity -> divideQuantities(lhs, rhs)
                 is Operand.Number -> null
                 is Operand.Percentage -> null
             }
-
             is Operand.Percentage -> null
-
         }
     }
 

@@ -91,7 +91,7 @@ private fun addNewEditorRow(editorIndex: Int, globalVariables: MutableMap<String
 <div class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title pull-left" onclick="onTitleClick$editorIndex()">$panelTitle</h3>
-    <button class="btn btn-default pull-right" onclick="onHideButtonClick$editorIndex(false)">Hide</button>
+    <!--button class="btn btn-default pull-right" onclick="onHideButtonClick$editorIndex(false)">Hide</button-->
     <div class="clearfix"></div>
   </div>
   <div class="panel-body">
