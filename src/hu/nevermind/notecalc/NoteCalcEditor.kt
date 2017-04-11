@@ -92,13 +92,21 @@ class NoteCalcEditor(defaultValue: String,
                     if (resultOperand != null) {
                         sum += resultOperand.toRawNumber()
                         resultsByLineNumber += nullBasedLineIndex + 1 to resultOperand
-                        resultString.append("${createResultString(resultOperand, currentVariableName)}\n")
                         variables["\$prev"] = resultOperand
-                    } else {
-                        resultString.append('\n')
                         if (line.startsWith("--") || line.startsWith("==")) {
-                            sum = 0.0
+                            resultString.append("$line\n")
+                        } else {
+                            resultString.append("${createResultString(resultOperand, currentVariableName)}\n")
                         }
+                    } else {
+                        if (line.startsWith("--") || line.startsWith("==")) {
+                            resultString.append("$line\n")
+                        } else {
+                            resultString.append('\n')
+                        }
+                    }
+                    if (line.startsWith("--") || line.startsWith("==")) {
+                        sum = 0.0
                     }
                     highlightedTexts.addAll(evaluationResult.highlightedTexts)
                 }

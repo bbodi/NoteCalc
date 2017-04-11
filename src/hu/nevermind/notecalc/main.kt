@@ -32,7 +32,7 @@ fun main(args: Array<String>) {
         createNoteCalcEditors(allNoteCalcEntries)
         if (nextNoteCalcIndex == 0) {
             localStorage.setNoteCalcTitle(nextNoteCalcIndex, "Welcome")
-            localStorage.setNoteCalcContent(nextNoteCalcIndex, defaultText)
+            localStorage.setNoteCalcContent(nextNoteCalcIndex, defaultWelcomingText)
             localStorage.setNoteCaclcVisibility(nextNoteCalcIndex, "true")
             addButtonClicked()
         }
@@ -160,7 +160,7 @@ private fun noteCalcTitleKey(editorIndex: Int): String = "storedNoteCalcTitle$ed
 
 private fun noteCaclcVisibleKey(editorIndex: Int): String = "storedNoteCalcVisible$editorIndex"
 
-private const val defaultText: String = """==========================================================
+private const val defaultWelcomingText: String = """==========================================================
 ========================== Welcome =======================
 ==========================================================
 
@@ -228,7 +228,7 @@ Conversions
 
 Methods
 =======
-Methods are defined at the start of the line with a "fun" keyword and a method name.
+Methods are defined at the beginning of the line with a "fun" keyword and a method name.
 Method name should not contain any space or special characters.
 Every line starting with a whitespace character after the method name is the body of the method.
 

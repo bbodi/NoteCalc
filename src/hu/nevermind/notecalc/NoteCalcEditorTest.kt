@@ -93,6 +93,7 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(220), "200 + 10%")
         assertEq(Operand.Number(180), "200 - 10%")
         assertEq(Operand.Number(20), "200 * 10%")
+        assertEq(Operand.Number(20), "10% * 200")
         assertEq(Operand.Percentage(30), "(10 + 20)%")
 
         assertEq(Operand.Number(181.82, NumberType.Float), "10% on what is $200")
@@ -184,6 +185,8 @@ class NoteCalcEditorTest {
         assertEq(Operand.Number(-3), "+(-(+(3)))")
         assertEq(Operand.Number(3), "+-+-3")
         assertEq(Operand.Number(-3), "-+-+-3")
+
+        assertEq(Operand.Number(Math.pow(1.03, 3.0)), "3%^3")
     }
 
     private fun assertEq(expectedValue: String, actualInput: String) {

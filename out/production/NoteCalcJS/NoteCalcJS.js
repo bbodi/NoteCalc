@@ -602,7 +602,7 @@ var NoteCalcJS = function (_, Kotlin) {
       createNoteCalcEditors(allNoteCalcEntries);
       if (nextNoteCalcIndex === 0) {
         setNoteCalcTitle(localStorage, nextNoteCalcIndex, 'Welcome');
-        setNoteCalcContent(localStorage, nextNoteCalcIndex, defaultText);
+        setNoteCalcContent(localStorage, nextNoteCalcIndex, defaultWelcomingText);
         setNoteCaclcVisibility(localStorage, nextNoteCalcIndex, 'true');
         addButtonClicked();
       }
@@ -755,7 +755,7 @@ var NoteCalcJS = function (_, Kotlin) {
   function noteCaclcVisibleKey(editorIndex) {
     return 'storedNoteCalcVisible' + editorIndex;
   }
-  var defaultText;
+  var defaultWelcomingText;
   function add($receiver, other) {
     return math.add($receiver, other);
   }
@@ -864,14 +864,24 @@ var NoteCalcJS = function (_, Kotlin) {
           if (resultOperand != null) {
             sum.v += resultOperand.toRawNumber();
             resultsByLineNumber.v = plus(resultsByLineNumber.v, to(nullBasedLineIndex + 1 | 0, resultOperand));
-            resultString.append_gw00v9$(this.createResultString_0(resultOperand, currentVariableName_0) + '\n');
             this.variables_0.put_xwzc9p$('$prev', resultOperand);
+            if (startsWith_0(item, '--') || startsWith_0(item, '==')) {
+              resultString.append_gw00v9$(item + '\n');
+            }
+             else {
+              resultString.append_gw00v9$(this.createResultString_0(resultOperand, currentVariableName_0) + '\n');
+            }
           }
            else {
-            resultString.append_s8itvh$(10);
             if (startsWith_0(item, '--') || startsWith_0(item, '==')) {
-              sum.v = 0.0;
+              resultString.append_gw00v9$(item + '\n');
             }
+             else {
+              resultString.append_s8itvh$(10);
+            }
+          }
+          if (startsWith_0(item, '--') || startsWith_0(item, '==')) {
+            sum.v = 0.0;
           }
           this.highlightedTexts_0.addAll_brywnq$(evaluationResult_0.highlightedTexts);
         }
@@ -1405,6 +1415,7 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(220), '200 + 10%');
     this.assertEq_1(new Operand$Number(180), '200 - 10%');
     this.assertEq_1(new Operand$Number(20), '200 * 10%');
+    this.assertEq_1(new Operand$Number(20), '10% * 200');
     this.assertEq_1(new Operand$Percentage(30), '(10 + 20)%');
     this.assertEq_1(new Operand$Number(181.82, NumberType$Float_getInstance()), '10% on what is $200');
     this.assertEq_1(new Operand$Number(2000), '10% of what is $200');
@@ -1444,6 +1455,7 @@ var NoteCalcJS = function (_, Kotlin) {
     this.assertEq_1(new Operand$Number(-3), '+(-(+(3)))');
     this.assertEq_1(new Operand$Number(3), '+-+-3');
     this.assertEq_1(new Operand$Number(-3), '-+-+-3');
+    this.assertEq_1(new Operand$Number(Math.pow(1.03, 3.0)), '3%^3');
   };
   function NoteCalcEditorTest$assertEq$lambda(closure$actualInput, this$NoteCalcEditorTest, closure$expectedValue) {
     return function (assert) {
@@ -2005,7 +2017,7 @@ var NoteCalcJS = function (_, Kotlin) {
       else if (Kotlin.equals(operator, '/'))
         tmp$ = to(this.divideOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, '+'))
-        tmp$ = to(this.plusOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
+        tmp$ = to(this.plusOperator_0(lhs, rhs), 2);
       else if (Kotlin.equals(operator, '-'))
         tmp$ = to(this.minusOperator_0(lhs, rhs != null ? rhs : Kotlin.throwNPE()), 2);
       else if (Kotlin.equals(operator, UNARY_MINUS_TOKEN_SYMBOL))
@@ -2050,9 +2062,17 @@ var NoteCalcJS = function (_, Kotlin) {
       else
         tmp$ = Kotlin.noWhenBranchMatched();
     }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
+     else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Number(Math.pow(Kotlin.numberToDouble(lhs.num) / 100 + 1, Kotlin.numberToDouble(rhs.num)), lhs.type);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
       tmp$ = Kotlin.noWhenBranchMatched();
     return tmp$;
   };
@@ -2129,7 +2149,9 @@ var NoteCalcJS = function (_, Kotlin) {
         var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
         tmp$ = new Operand$Number(Kotlin.numberToDouble(lhs.num) + xPercentOfLeftHandSide, lhs.type);
       }
-       else
+       else if (rhs == null)
+        tmp$ = null;
+      else
         tmp$ = Kotlin.noWhenBranchMatched();
     }
      else if (Kotlin.isType(lhs, Operand$Quantity)) {
@@ -2138,6 +2160,8 @@ var NoteCalcJS = function (_, Kotlin) {
       else if (Kotlin.isType(rhs, Operand$Number))
         tmp$ = null;
       else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = null;
+      else if (rhs == null)
         tmp$ = null;
       else
         tmp$ = Kotlin.noWhenBranchMatched();
@@ -2149,6 +2173,8 @@ var NoteCalcJS = function (_, Kotlin) {
         tmp$ = null;
       else if (Kotlin.isType(rhs, Operand$Percentage))
         tmp$ = new Operand$Percentage(Kotlin.numberToDouble(lhs.num) + Kotlin.numberToDouble(rhs.num), lhs.type);
+      else if (rhs == null)
+        tmp$ = null;
       else
         tmp$ = Kotlin.noWhenBranchMatched();
     }
@@ -2186,6 +2212,9 @@ var NoteCalcJS = function (_, Kotlin) {
       tmp$ = Kotlin.noWhenBranchMatched();
     return tmp$;
   };
+  TokenListEvaulator.prototype.percentageOf_0 = function ($receiver, base) {
+    return Kotlin.numberToDouble(base) / 100 * Kotlin.numberToDouble($receiver);
+  };
   TokenListEvaulator.prototype.multiplyOperator_0 = function (lhs, rhs) {
     var tmp$;
     if (Kotlin.isType(lhs, Operand$Number)) {
@@ -2193,11 +2222,9 @@ var NoteCalcJS = function (_, Kotlin) {
         tmp$ = this.multiplyNumbers_0(lhs, rhs);
       else if (Kotlin.isType(rhs, Operand$Quantity))
         tmp$ = new Operand$Quantity(math.eval(lhs.num + ' * ' + rhs.quantity), NumberType$Float_getInstance());
-      else if (Kotlin.isType(rhs, Operand$Percentage)) {
-        var xPercentOfLeftHandSide = Kotlin.numberToDouble(lhs.num) / 100 * Kotlin.numberToDouble(rhs.num);
-        tmp$ = new Operand$Number(xPercentOfLeftHandSide, lhs.type);
-      }
-       else
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = new Operand$Number(this.percentageOf_0(rhs.num, lhs.num), lhs.type);
+      else
         tmp$ = Kotlin.noWhenBranchMatched();
     }
      else if (Kotlin.isType(lhs, Operand$Quantity)) {
@@ -2210,9 +2237,17 @@ var NoteCalcJS = function (_, Kotlin) {
       else
         tmp$ = Kotlin.noWhenBranchMatched();
     }
-     else if (Kotlin.isType(lhs, Operand$Percentage))
-      tmp$ = null;
-    else
+     else if (Kotlin.isType(lhs, Operand$Percentage)) {
+      if (Kotlin.isType(rhs, Operand$Number))
+        tmp$ = new Operand$Number(this.percentageOf_0(lhs.num, rhs.num), lhs.type);
+      else if (Kotlin.isType(rhs, Operand$Quantity))
+        tmp$ = null;
+      else if (Kotlin.isType(rhs, Operand$Percentage))
+        tmp$ = new Operand$Number(Kotlin.numberToDouble(lhs.num) / 100.0 * (Kotlin.numberToDouble(rhs.num) / 100.0), NumberType$Float_getInstance());
+      else
+        tmp$ = Kotlin.noWhenBranchMatched();
+    }
+     else
       tmp$ = Kotlin.noWhenBranchMatched();
     return tmp$;
   };
@@ -2855,7 +2890,7 @@ var NoteCalcJS = function (_, Kotlin) {
   NOTE_CALC_IDS_KEY = 'commaSeparatedNoteCaclcIds';
   UNNAMED_TITLE = 'Unnamed';
   addButtonClicked = addButtonClicked$lambda;
-  defaultText = '==========================================================\n========================== Welcome =======================\n==========================================================\n\nNotecalc is a handy calculator trying to bring the advantages of Soulver\nto the web.\n\nYou can use it as a combination of a calculator and a notepad, mixing calculations,\nnumbers, operators, units of measurement with meaningful, descriptive texts around them,\nproviding context for your calculations. Results on the right are automatically\nupdated when text changes.\n\nText is automatically saved in your local browser, nothing is sent to the server.\nYou can rename the single NoteCalc editors by clicking on the current name at the\nheader of the panel (which is now "Welcome").\nYou can create new editors with the "Add" button at the bottom of the page.\n\nSome examples. Feel free to change them and play around.\n\nPercentages\n===========\n100 + 10%\n200 * 5%\n200 - 20%\n\nNumbers, Hex and binary digits\n==============================\nYou don\'t have to count zeros\n100k\n10M\nspace separated numbers 10 000 000\nBinary and Hex numbers\n0xFF\n0b1100 + 0b0011\n\nVariables\n=========\nBank of America = 50 000 + 5.25%\nCitibank = 50 000 + 6%\nDifference of Citibank - Bank of America\n$prev * 3 years\n$prev holds the result of the previous calculation\n--\n12$ for beer\n2*13$ for tickets\nall spending = $sum\n\n$sum always holds the sum of the previous calculations\n-- you can reset them with at least two dashes (--) or equal signs (==) at the beginning of a line\n$sum is now zero\n\nUnits of measure\n================\nThe road took 45minutes and the speed of the vehicle was * 12km/h\n(This is an example that comments can be anywhere in an expressions.\nThe previous line works because it is basically a simple multiplication\nbetween 45minutes and 12km/h, but there are words between the operands and\nthe operator, which, of course, are ignored when calculating the result)\nDownloading a 1GB file with / 10Mb/s in min\nor simply 1GB / 10Mb/s in min\n\nConversions\n===========\n11years in weeks\n1 day in seconds\n12 km/h in m/s\n5m*m/s in km*km/h\n\n\nMethods\n=======\nMethods are defined at the start of the line with a "fun" keyword and a method name.\nMethod name should not contain any space or special characters.\nEvery line starting with a whitespace character after the method name is the body of the method.\n\nfun motion(time)\n  a = (0 - 9.8)m/s^2\n  v0 = 100 m/s\n  x0 = 490 m\n  1/2 * a * time^2 + v0 * time + x0\n\nmotion(1s)\nmotion(10s)\nmotion(20s)\nmotion(30s)';
+  defaultWelcomingText = '==========================================================\n========================== Welcome =======================\n==========================================================\n\nNotecalc is a handy calculator trying to bring the advantages of Soulver\nto the web.\n\nYou can use it as a combination of a calculator and a notepad, mixing calculations,\nnumbers, operators, units of measurement with meaningful, descriptive texts around them,\nproviding context for your calculations. Results on the right are automatically\nupdated when text changes.\n\nText is automatically saved in your local browser, nothing is sent to the server.\n\nSome examples. Feel free to change them and play around.\n\nPercentages\n===========\n100 + 10%\n200 * 5%\n200 - 20%\n\nNumbers, Hex and binary digits\n==============================\nYou don\'t have to count zeros\n100k\n10M\nspace separated numbers 10 000 000\nBinary and Hex numbers\n0xFF\n0b1100 + 0b0011\n\nVariables\n=========\nBank of America = 50 000 + 5.25%\nCitibank = 50 000 + 6%\nDifference of Citibank - Bank of America\n$prev * 3 years\n$prev holds the result of the previous calculation\n--\n12$ for beer\n2*13$ for tickets\nall spending = $sum\n\n$sum always holds the sum of the previous calculations\n-- you can reset them with at least two dashes (--) or equal signs (==) at the beginning of a line\n$sum is now zero\n\nUnits of measure\n================\nThe road took 45minutes and the speed of the vehicle was * 12km/h\n(This is an example that comments can be anywhere in an expressions.\nThe previous line works because it is basically a simple multiplication\nbetween 45minutes and 12km/h, but there are words between the operands and\nthe operator, which, of course, are ignored when calculating the result)\nDownloading a 1GB file with / 10Mb/s in min\nor simply 1GB / 10Mb/s in min\n\nConversions\n===========\n11years in weeks\n1 day in seconds\n12 km/h in m/s\n5m*m/s in km*km/h\n\n\nMethods\n=======\nMethods are defined at the beginning of the line with a "fun" keyword and a method name.\nMethod name should not contain any space or special characters.\nEvery line starting with a whitespace character after the method name is the body of the method.\n\nfun motion(time)\n  a = (0 - 9.8)m/s^2\n  v0 = 100 m/s\n  x0 = 490 m\n  1/2 * a * time^2 + v0 * time + x0\n\nmotion(1s)\nmotion(10s)\nmotion(20s)\nmotion(30s)';
   Kotlin.defineModule('NoteCalcJS', _);
   main([]);
   return _;
