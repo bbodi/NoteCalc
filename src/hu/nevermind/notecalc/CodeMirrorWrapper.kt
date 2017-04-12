@@ -17,14 +17,16 @@ object CodeMirrorWrapper {
             }
             object {
                 val from = object {
-                    val line = cur.line;
+                    val line = cur.line
                     val ch = token.start
                 }
                 val to = object {
-                    val line = cur.line;
+                    val line = cur.line
                     val ch = token.end
                 }
-                val list = (cm.options.noteCalcEditor as NoteCalcEditor).allVariables.keys.filter { it.contains((token.string as String).trim()) }.toTypedArray()
+                val list = (cm.options.noteCalcEditor as NoteCalcEditor).allVariables.keys
+                        .filter { it.contains((token.string as String).trim()) }
+                        .toTypedArray()
             }
         })
     }

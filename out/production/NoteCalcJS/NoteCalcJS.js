@@ -76,15 +76,16 @@ var NoteCalcJS = function (_, Kotlin) {
     this.to = new CodeMirrorWrapper$enableAutocompletion$lambda$ObjectLiteral$to$ObjectLiteral(closure$cur, closure$token);
     var tmp$;
     var $receiver = (Kotlin.isType(tmp$ = closure$cm.options.noteCalcEditor, NoteCalcEditor) ? tmp$ : Kotlin.throwCCE()).allVariables.keys;
+    var $receiver_0 = Kotlin.kotlin.collections.sortedWith_eknfly$($receiver, new Kotlin.kotlin.comparisons.compareByDescending$f(CodeMirrorWrapper$enableAutocompletion$lambda$ObjectLiteral$list$lambda));
     var destination = Kotlin.kotlin.collections.ArrayList_init_ww73n8$();
     var tmp$_0;
-    tmp$_0 = $receiver.iterator();
+    tmp$_0 = $receiver_0.iterator();
     while (tmp$_0.hasNext()) {
       var element = tmp$_0.next();
       var tmp$_1;
-      var $receiver_0 = typeof (tmp$_1 = closure$token.string) === 'string' ? tmp$_1 : Kotlin.throwCCE();
+      var $receiver_1 = typeof (tmp$_1 = closure$token.string) === 'string' ? tmp$_1 : Kotlin.throwCCE();
       var tmp$_2;
-      if (contains(element, Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_2 = $receiver_0) ? tmp$_2 : Kotlin.throwCCE()).toString())) {
+      if (contains(element, Kotlin.kotlin.text.trim_gw00vp$(Kotlin.isCharSequence(tmp$_2 = $receiver_1) ? tmp$_2 : Kotlin.throwCCE()).toString())) {
         destination.add_11rb$(element);
       }
     }
@@ -106,6 +107,9 @@ var NoteCalcJS = function (_, Kotlin) {
     kind: Kotlin.Kind.CLASS,
     interfaces: []
   };
+  function CodeMirrorWrapper$enableAutocompletion$lambda$ObjectLiteral$list$lambda(it) {
+    return it.length;
+  }
   CodeMirrorWrapper$enableAutocompletion$lambda$ObjectLiteral.$metadata$ = {
     kind: Kotlin.Kind.CLASS,
     interfaces: []
